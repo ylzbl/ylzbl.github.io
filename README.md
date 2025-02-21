@@ -1,5 +1,7 @@
 # 娱乐资本论-文章存档
 
+![Logo](https://pic.rmb.bdstatic.com/bjh/3f21f1de/250222/00e3f15de42252ed96d64723e66751d6.png)
+
 ## 按年份查看
 
 - [2024](/blog/2024/)
