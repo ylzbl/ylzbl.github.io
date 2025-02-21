@@ -1,176 +1,68 @@
-# HonKit
+# 娱乐资本论-文章存档
 
-HonKit is building beautiful books using GitHub/Git and Markdown.
+## 按年份查看
 
-![HonKit Screenshot](./honkit.png)
+- [2024](/blog/2024/)
 
-## Documentation and Demo
+## 公司简介
 
-HonKit documentation is built by HonKit!
+娱乐资本论是上海界面财联社科技股份有限公司旗下新媒体账号。
 
-- <https://honkit.netlify.app/>
+如今，娱乐资本论的关注视角不仅仅局限在影视综、明星经济，现已快速覆盖至微短剧、互联网、电商、营销等多元领域，并致力于产出全网最优质的独家报道。
 
-## Quick Start
+在影视综领域，娱乐资本论坚持已有的方法论，通过累积的大量行业资源，产出了很多优秀报道——
 
-### Installation
+- 《年度剧王<我是刑警>收官，爱奇艺现实主义招牌为何响亮》
+- 《为拆解<再见爱人>，我请综艺导演吃“熏鸡”》
+- 《<好东西>票房预测破5亿，一亿都靠N刷复看？丨50人调查》
+- 《<好东西><小巷人家>妈味走俏，影视剧女性互助进入2.0时代》；
 
-- Requirement: [Node.js](https://nodejs.org) [LTS](https://nodejs.org/en/about/previous-releases) version
+在微短剧领域，娱乐资本论的多篇独家报道引领行业——
 
-The best way to install HonKit is via **NPM** or **Yarn**.
+- 《掘金东南亚，AI译制成主流，短剧如何撬动全球百亿市场？》
+- 《借势短剧暴涨5亿，这家江西帮短剧公司让同行黯淡无光》
+- 《大女主短剧破亿背后，是男频编剧血泪史》
+- 《男爱保姆，女恋霸总，40+人群撑起40%短剧市场|中老年新娱乐消费报告①》；
 
-```
-$ npm init --yes
-$ npm install honkit --save-dev
-```
+在电商直播及新消费领域，娱乐资本论启动了“新电商50强”报道计划，全面盘点直播电商领域的乱象、机遇与挑战——
 
-⚠️ Warning:
+- 《“我在古着直播间掘金，几百块买一件奢牌”》
+- 《毛戈平上市即“暴涨”，给美妆、消费行业带来什么启示？》
+- 《张大奕“关店”：网红电商浮华背后的残酷真相》
+- 《泥潭中的茶饮加盟商：百万亏损，点位被抢，“自己人打自己人”》；
 
-- If you have installed `honkit` globally, you must install each plugins globally as well
-- If you have installed `honkit` locally, you must install each plugins locally as well
+在互联网内容及互联网平台领域，我们关注社交、社区、长音频、信息流广告等互联网与内容的交叉领域和各大平台动态，已产出多篇优质内容，强调信息增量与独家视角——
 
-We recommend installing `honkit` locally.
+- 《携手孩之宝集结“塞伯坦星人”，京东超市潮玩节如何玩转“大孩子的快乐”？》
+- 《网易云音乐“崩溃”背后，降本增效埋下的雷？》
+- 《千万人在淘宝，围观主播的「人生时刻」》
+- 《拆解Kimi投放策略：B站长尾娱乐化营销效果如何？》；
 
-### Create a book
+在内容营销及品牌营销领域，我们关注影视综内容如何做营销及IP商业化，关注互联网平台及品牌如何做营销并进行联动——
 
-HonKit can set up a boilerplate book:
+- 《50万达人带来40亿销售，一文揭秘“深度分销”》
+- 《对话林清轩创始人孙来春：内卷的精华油赛道，如何做到双11增长96%？｜品牌深壹度》
+- 《有声量没销量，“谢添地”赞助<声生不息>值回入场费了吗？》
+- 《牵手时尚女王杨幂，高梵如何在高端鹅绒服行列突围？》。
 
-```
-$ npx honkit init
-```
+## 招聘
 
-If you wish to create the book into a new directory, you can do so by running `honkit init ./directory`
+娱乐资本论已同步开启多个岗位的纳新，诚邀您的加入。
 
-Preview and serve your book using:
+我们的优势：
 
-```
-$ npx honkit serve
-```
+- 中国娱乐产业第一垂直新媒体，我们关注文化的产业融合，影视的真挚表达，互联网娱乐的时代精神，拥有全行业最好的采访资源，顶级大咖等你对话；
+- 这里有全行业最专业、执行力最强的新闻团队，致力于产出互联网内容领域最独家、最深度、最优秀的新闻报道；
+- 我们的事业不断裂变，新业务、新版块陆续诞生，为你带来通畅的职业上升通道，以及内部创业孵化机会，只要你敢想敢做，积极进取，大量的行业知识和采编技能唾手可得。
 
-Or build the static website using:
+福利待遇：
 
-```
-$ npx honkit build
-```
+- 超出同行的薪资，对卓越的同事不吝嘉奖；
+- 季度奖+年终奖+五险一金+全勤奖；
+- 免费水果、生日会、爱心体检卡等；
+- 带薪病假、带薪姨妈假、节假日福利；
+- 不定期员工培训，一年一度团建旅游。
 
-You can start to write your book!
+招聘职位请参阅微信公众号：娱乐资本论的最新更新。对于良好合作的兼职作者及实习生伙伴给予转正机会，实习生需线下实习3个月及以上，每周坐班3天以上，欢迎大家投递简历！
 
-For more details, see [HonKit's documentation](https://honkit.netlify.app/).
-
-## Docker support
-
-Honkit provide docker image at [honkit/honkit](https://hub.docker.com/r/honkit/honkit).
-
-This docker image includes built-in dependencies for PDF/epub.
-
-```
-docker pull honkit/honkit
-docker run -v `pwd`:`pwd` -w `pwd` --rm -it honkit/honkit honkit build
-docker run -v `pwd`:`pwd` -w `pwd` --rm -it honkit/honkit honkit pdf
-```
-
-For more details, see [docker/](./docker/).
-
-## Usage examples
-
-HonKit can be used to create a book, public documentation, enterprise manual, thesis, research papers, etc.
-
-You can find a list of [real-world examples](https://honkit.netlify.app/examples.html) in the documentation.
-
-## Features
-
-* Write using [Markdown](https://honkit.netlify.app/syntax/markdown.html) or [AsciiDoc](https://honkit.netlify.app/syntax/asciidoc.html)
-* Output as a website or [ebook (pdf, epub, mobi)](https://honkit.netlify.app/ebook.html)
-* [Multi-Languages](https://honkit.netlify.app/languages.html)
-* [Lexicon / Glossary](https://honkit.netlify.app/lexicon.html)
-* [Cover](https://honkit.netlify.app/ebook.html)
-* [Variables and Templating](https://honkit.netlify.app/templating/)
-* [Content References](https://honkit.netlify.app/templating/conrefs.html)
-* [Plugins](https://honkit.netlify.app/plugins/)
-* [Beautiful default theme](./packages/@honkit/theme-default)
-
-## Fork of GitBook
-
-HonKit is a fork of [GitBook (Legacy)](https://github.com/GitbookIO/gitbook).
-[GitBook (Legacy)](https://github.com/GitbookIO/gitbook) is [deprecated](https://github.com/GitbookIO/gitbook/commit/6c6ef7f4af32a2977e44dd23d3feb6ebf28970f4) and an inactive project.
-
-HonKit aims to smooth the migration from GitBook (Legacy) to HonKit.
-
-### Compatibility with GitBook
-
-- Almost all plugins work without changes!
-- Support `gitbook-plugin-*` packages
-    - You should install these plugins via npm or yarn
-    - `npm install gitbook-plugin-<example> --save-dev`
-
-### Differences with GitBook
-
-- Node.js 14+ supports
-- Improve `build`/`serve` performance
-    - `honkit build`: use file cache by default
-    - `honkit serve`: 28.2s → 0.9s in [examples/benchmark](examples/benchmark)
-    - Also, support `--reload` flag for force refresh
-- Improve plugin loading logic
-    - Reduce cost of finding `honkit-plugin-*` and `gitbook-plugin-*`
-    - Support `honkit-plugin-*` and `@scope/honkit-plugin-*` (GitBook does not support a scoped module)
-- Remove `install` command
-    - Instead of it, just use `npm install` or `yarn install`
-- Remove `global-npm` dependency
-    - You can use HonKit with another npm package manager like `npm` or `yarn`
-- Update dependencies
-    - Upgrade to nunjucks@2, highlight.js etc...
-    - It will reduce bugs
-- TypeScript
-    - Rewritten by TypeScript
-- Monorepo codebase
-    - Easy to maintain
-- [Docker support](./docker)
-
-### Migration from GitBook
-
-Replace `gitbook-cli` with `honkit`.
-
-```
-npm uninstall gitbook-cli
-npm install honkit --save-dev
-```
-
-Replace `gitbook` command with `honkit` command.
-
-```diff
-  "scripts": {
--    "build": "gitbook build",
-+    "build": "honkit build",
--    "serve": "gitbook serve"
-+    "serve": "honkit serve"
-  },
-```
-
-After that, HonKit just works!
-
-Examples of migration:
-
-- [Add a Github action to deploy · DjangoGirls/tutorial](https://github.com/DjangoGirls/tutorial/pull/1666)
-- [Migrate from GitBook to Honkit · swaroopch/byte-of-python](https://github.com/swaroopch/byte-of-python/pull/88)
-- [replace Gitbook into Honkit · yamat47/97-things-every-programmer-should-know](https://github.com/yamat47/97-things-every-programmer-should-know/pull/2)
-- [Migrate misp-book from GitBook to honkit](https://github.com/MISP/misp-book/pull/227)
-
-## Benchmarks
-
-`honkit build` benchmark:
-
-- <https://honkit.github.io/honkit/dev/bench/>
-
-## Licensing
-
-HonKit is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
-
-HonKit is a fork of [GitBook (Legacy)](https://github.com/GitbookIO/gitbook).
-GitBook is licensed under the Apache License, Version 2.0.
-
-Also, HonKit includes [bignerdranch/gitbook](https://github.com/bignerdranch/gitbook) works.
-
-## Sponsors
-
-<a href="https://www.netlify.com">
-<img src="https://www.netlify.com/img/global/badges/netlify-color-bg.svg" alt="Deploys by Netlify" />
-</a>
+简历及作品投递至hr@ylzbl.com
