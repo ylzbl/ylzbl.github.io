@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎙️ 播客音频合成器 - 专业版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* 音频文件输入区域 */
+        .audio-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .audio-input-card {
+            background: #f8fafc;
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .audio-input-card:hover {
+            border-color: #667eea;
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+
+        .audio-input-card.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transform: scale(1.02);
+        }
+
+        .audio-input-card.has-file {
+            border-color: #10b981;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #9ca3af;
+            margin-bottom: 16px;
+        }
+
+        .has-file .upload-icon {
+            color: #10b981;
+        }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .upload-text {
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            transition: border-color 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #065f46;
+            text-align: left;
+        }
+
+        /* 控制参数区域 */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .control-card {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .control-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .range-input {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .range-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .number-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            font-size: 1rem;
+        }
+
+        /* 按钮区域 */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 进度条 */
+        .progress-section {
+            display: none;
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        /* 状态消息 */
+        .status-message {
+            display: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .status-message.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #065f46;
+        }
+
+        .status-message.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #7f1d1d;
+        }
+
+        /* 音频预览 */
+        .preview-section {
+            display: none;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 30px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .preview-audio {
+            width: 100%;
+            margin-top: 16px;
+            border-radius: 8px;
+        }
+
+        /* 使用说明 */
+        .instructions {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .instructions h3 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 12px;
+            color: #4a5568;
+        }
+
+        .instructions strong {
+            color: #2d3748;
+        }
+
+        .warning {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            color: #92400e;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .app-container {
+                padding: 20px;
+                border-radius: 16px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .audio-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        /* 特殊参数提示 */
+        .param-hint {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #4c51bf;
+        }
+
+        .zero-fade-hint {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>🎙️ 播客音频合成器</h1>
+            <p>专业级音频混音工具，支持本地文件和网络链接，实现精确的时间偏移混音和叠化合成</p>
+        </div>
+
+        <div class="app-container">
+            <!-- 音频文件输入区域 -->
+            <div class="section">
+                <h2 class="section-title">
+                    📁 音频文件选择
+                </h2>
+                <div class="audio-inputs">
+                    <!-- 片头音频 -->
+                    <div class="audio-input-card" id="introCard">
+                        <div class="card-header">🎵 片头音频</div>
+                        <div class="upload-icon">📤</div>
+                        <input type="file" class="file-input" id="introFile" accept="audio/*" />
+                        <div class="upload-text">拖拽文件到此处或点击选择</div>
+                        <input type="url" class="url-input" id="introUrl" placeholder="或输入音频文件网络链接..." />
+                        <div class="file-info" id="introInfo" style="display: none;"></div>
+                    </div>
+
+                    <!-- 主音频 -->
+                    <div class="audio-input-card" id="mainCard">
+                        <div class="card-header">🎤 主音频内容</div>
+                        <div class="upload-icon">📤</div>
+                        <input type="file" class="file-input" id="mainFile" accept="audio/*" />
+                        <div class="upload-text">拖拽文件到此处或点击选择</div>
+                        <input type="url" class="url-input" id="mainUrl" placeholder="或输入音频文件网络链接..." />
+                        <div class="file-info" id="mainInfo" style="display: none;"></div>
+                    </div>
+
+                    <!-- 片尾音频 -->
+                    <div class="audio-input-card" id="outroCard">
+                        <div class="card-header">🎼 片尾音频</div>
+                        <div class="upload-icon">📤</div>
+                        <input type="file" class="file-input" id="outroFile" accept="audio/*" />
+                        <div class="upload-text">拖拽文件到此处或点击选择</div>
+                        <input type="url" class="url-input" id="outroUrl" placeholder="或输入音频文件网络链接..." />
+                        <div class="file-info" id="outroInfo" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 合成参数控制 -->
+            <div class="section">
+                <h2 class="section-title">
+                    ⚙️ 混音参数设置
+                </h2>
+                <div class="controls-grid">
+                    <div class="control-card">
+                        <label class="control-label">🕐 片头混音开始时间（秒）</label>
+                        <div class="range-container">
+                            <input type="range" class="range-input" id="introDelay" min="0" max="30" value="12" step="0.1" />
+                            <input type="number" class="number-input" id="introDelayNum" min="0" max="30" value="12" step="0.1" />
+                        </div>
+                        <div class="param-hint">
+                            💡 设置片头音频在第几秒开始与主音频混音。例如：5秒表示片头播放5秒后开始混入主音频。
+                        </div>
+                    </div>
+
+                    <div class="control-card">
+                        <label class="control-label">🎚️ 片尾叠化时间（秒）</label>
+                        <div class="range-container">
+                            <input type="range" class="range-input" id="fadeTime" min="0" max="30" value="0" step="0.1" />
+                            <input type="number" class="number-input" id="fadeTimeNum" min="0" max="30" value="0" step="0.1" />
+                        </div>
+                        <div class="param-hint" id="fadeHint">
+                            💡 设置片尾与主音频的叠化渐变时间。较长的叠化时间产生更平滑的过渡效果。
+                        </div>
+                    </div>
+
+                    <div class="control-card">
+                        <label class="control-label">🎵 MP3导出质量</label>
+                        <select class="select-input" id="mp3Quality">
+                            <option value="96">96 kbps - 较小文件</option>
+                            <option value="128" selected>128 kbps - 推荐品质</option>
+                            <option value="192">192 kbps - 高品质</option>
+                            <option value="256">256 kbps - 更高品质</option>
+                            <option value="320">320 kbps - 最高品质</option>
+                        </select>
+                        <div class="param-hint">
+                            💡 更高的比特率意味着更好的音质，但文件会更大。128kbps适合大多数播客需求。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" id="previewBtn" onclick="previewComposition()" disabled>
+                    🔊 预览效果
+                </button>
+                <button class="btn btn-primary" id="composeBtn" onclick="composePodcast()" disabled>
+                    🎵 合成并导出MP3
+                </button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopPreview()" disabled>
+                    ⏹️ 停止播放
+                </button>
+            </div>
+
+            <!-- 进度显示 -->
+            <div class="progress-section" id="progressContainer">
+                <div class="progress-text" id="progressText">准备处理...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- 状态消息 -->
+            <div class="status-message" id="statusMessage"></div>
+
+            <!-- 音频预览 -->
+            <div class="preview-section" id="previewContainer">
+                <h3>🎧 音频预览</h3>
+                <audio class="preview-audio" id="previewAudio" controls></audio>
+            </div>
+
+            <!-- 使用说明 -->
+            <div class="instructions">
+                <h3>📖 使用说明</h3>
+                <ol>
+                    <li><strong>上传音频文件</strong>：支持拖拽上传或输入网络链接。支持MP3、WAV、OGG、M4A等常见格式。</li>
+                    <li><strong>设置混音参数</strong>：
+                        <ul style="margin: 8px 0 8px 20px;">
+                            <li>片头混音时间：控制片头音频播放多久后开始混入主音频</li>
+                            <li>片尾叠化时间：设为0秒表示无混音直接拼接，大于0秒实现渐变过渡</li>
+                        </ul>
+                    </li>
+                    <li><strong>预览效果</strong>：在导出前可以预听合成效果，确保音频混合符合预期。</li>
+                    <li><strong>导出MP3</strong>：选择合适的音质后一键导出最终文件。</li>
+                </ol>
+                <div class="warning">
+                    ⚠️ <strong>注意事项</strong>：处理大文件可能需要较长时间，请耐心等待。所有音频处理都在本地完成，确保您的隐私和数据安全。
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音频处理库 -->
+    <script src="https://unpkg.com/tone@latest/build/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
+
+    <script>
+    class EnhancedPodcastComposer {
+        constructor() {
+            this.audioBuffers = {};
+            this.currentPreview = null;
+            this.audioContext = null;
+            this.initializeAudioContext();
+            this.setupEventListeners();
+            this.setupDragDrop();
+        }
+
+        async initializeAudioContext() {
+            try {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (this.audioContext.state === 'suspended') {
+                    await this.audioContext.resume();
+                }
+            } catch (error) {
+                this.showStatus('error', '音频上下文初始化失败：' + error.message);
+            }
+        }
+
+        setupEventListeners() {
+            // 文件输入监听
+            ['intro', 'main', 'outro'].forEach(type => {
+                const fileInput = document.getElementById(type + 'File');
+                const urlInput = document.getElementById(type + 'Url');
+                
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files[0]) {
+                        this.handleFileInput(e.target.files[0], type);
+                        urlInput.value = ''; // 清空URL输入
+                    }
+                });
+
+                urlInput.addEventListener('change', (e) => {
+                    if (e.target.value) {
+                        this.handleUrlInput(e.target.value, type);
+                        fileInput.value = ''; // 清空文件输入
+                    }
+                });
+
+                urlInput.addEventListener('paste', (e) => {
+                    setTimeout(() => {
+                        if (e.target.value) {
+                            this.handleUrlInput(e.target.value, type);
+                            fileInput.value = '';
+                        }
+                    }, 100);
+                });
+            });
+
+            // 参数同步
+            this.setupParameterSync('introDelay', 'introDelayNum');
+            this.setupParameterSync('fadeTime', 'fadeTimeNum');
+
+            // 监听叠化时间变化，更新提示
+            document.getElementById('fadeTime').addEventListener('input', (e) => {
+                this.updateFadeHint(parseFloat(e.target.value));
+            });
+
+            // 页面可见性变化时暂停预览
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.stopPreview();
+                }
+            });
+        }
+
+        setupParameterSync(rangeId, numberId) {
+            const range = document.getElementById(rangeId);
+            const number = document.getElementById(numberId);
+            
+            range.addEventListener('input', (e) => {
+                number.value = e.target.value;
+            });
+            
+            number.addEventListener('input', (e) => {
+                range.value = e.target.value;
+            });
+        }
+
+        updateFadeHint(fadeTime) {
+            const hintElement = document.getElementById('fadeHint');
+            if (fadeTime === 0) {
+                hintElement.className = 'param-hint zero-fade-hint';
+                hintElement.innerHTML = '⚠️ 设为0秒将直接拼接片尾音频，不进行叠化混音。';
+            } else {
+                hintElement.className = 'param-hint';
+                hintElement.innerHTML = '💡 设置片尾与主音频的叠化渐变时间。较长的叠化时间产生更平滑的过渡效果。';
+            }
+        }
+
+        setupDragDrop() {
+            ['intro', 'main', 'outro'].forEach(type => {
+                const card = document.getElementById(type + 'Card');
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    card.addEventListener(eventName, this.preventDefaults, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    card.addEventListener(eventName, () => this.highlight(card), false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    card.addEventListener(eventName, () => this.unhighlight(card), false);
+                });
+
+                card.addEventListener('drop', (e) => this.handleDrop(e, type), false);
+            });
+        }
+
+        preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        highlight(card) {
+            card.classList.add('dragover');
+        }
+
+        unhighlight(card) {
+            card.classList.remove('dragover');
+        }
+
+        handleDrop(e, type) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('audio/')) {
+                    this.handleFileInput(file, type);
+                    // 清空对应的URL输入
+                    document.getElementById(type + 'Url').value = '';
+                } else {
+                    this.showStatus('error', '请选择音频文件！');
+                }
+            }
+        }
+
+        async handleFileInput(file, type) {
+            try {
+                this.showProgress(true, '加载音频文件...');
+                const arrayBuffer = await file.arrayBuffer();
+                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                
+                this.audioBuffers[type] = audioBuffer;
+                this.updateFileInfo(type, { name: file.name, size: file.size }, audioBuffer);
+                this.updateCardState(type, true);
+                this.updateButtonStates();
+                this.showProgress(false);
+                this.showStatus('success', `${file.name} 加载成功！`);
+            } catch (error) {
+                this.showProgress(false);
+                this.showStatus('error', `文件加载失败：${error.message}`);
+                this.updateCardState(type, false);
+            }
+        }
+
+        async handleUrlInput(url, type) {
+            try {
+                this.showProgress(true, '从网络加载音频...');
+                
+                // 验证URL格式
+                if (!this.isValidUrl(url)) {
+                    throw new Error('请输入有效的网络链接');
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`网络请求失败: ${response.status}`);
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                
+                this.audioBuffers[type] = audioBuffer;
+                const fileName = this.getFileNameFromUrl(url);
+                this.updateFileInfo(type, { name: fileName, size: arrayBuffer.byteLength }, audioBuffer);
+                this.updateCardState(type, true);
+                this.updateButtonStates();
+                this.showProgress(false);
+                this.showStatus('success', `网络音频加载成功！`);
+            } catch (error) {
+                this.showProgress(false);
+                this.showStatus('error', `网络音频加载失败：${error.message}`);
+                this.updateCardState(type, false);
+            }
+        }
+
+        isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        getFileNameFromUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                const pathname = urlObj.pathname;
+                const fileName = pathname.split('/').pop();
+                return fileName || 'network_audio.mp3';
+            } catch (_) {
+                return 'network_audio.mp3';
+            }
+        }
+
+        updateFileInfo(type, fileInfo, audioBuffer) {
+            const infoElement = document.getElementById(type + 'Info');
+            const duration = audioBuffer.duration.toFixed(2);
+            const size = (fileInfo.size / 1024 / 1024).toFixed(2);
+            infoElement.innerHTML = `
+                <div><strong>文件名：</strong>${fileInfo.name}</div>
+                <div><strong>时长：</strong>${duration}秒 | <strong>大小：</strong>${size}MB</div>
+                <div><strong>采样率：</strong>${audioBuffer.sampleRate}Hz | <strong>声道：</strong>${audioBuffer.numberOfChannels}</div>
+            `;
+            infoElement.style.display = 'block';
+        }
+
+        updateCardState(type, hasFile) {
+            const card = document.getElementById(type + 'Card');
+            if (hasFile) {
+                card.classList.add('has-file');
+            } else {
+                card.classList.remove('has-file');
+            }
+        }
+
+        updateButtonStates() {
+            const hasAllFiles = ['intro', 'main', 'outro'].every(
+                type => this.audioBuffers[type]
+            );
+            
+            document.getElementById('previewBtn').disabled = !hasAllFiles;
+            document.getElementById('composeBtn').disabled = !hasAllFiles;
+        }
+
+        async previewComposition() {
+            try {
+                this.showProgress(true, '生成预览...');
+                
+                const composedBuffer = await this.composeAudio(true);
+                const audioBlob = this.audioBufferToWav(composedBuffer);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                const previewAudio = document.getElementById('previewAudio');
+                previewAudio.src = audioUrl;
+                
+                document.getElementById('previewContainer').style.display = 'block';
+                document.getElementById('stopBtn').disabled = false;
+                
+                this.showProgress(false);
+                this.showStatus('success', '预览生成成功！点击播放试听效果。');
+            } catch (error) {
+                this.showProgress(false);
+                this.showStatus('error', '预览生成失败：' + error.message);
+            }
+        }
+
+        stopPreview() {
+            const previewAudio = document.getElementById('previewAudio');
+            previewAudio.pause();
+            previewAudio.currentTime = 0;
+            document.getElementById('stopBtn').disabled = true;
+        }
+
+        async composePodcast() {
+            try {
+                this.showProgress(true, '开始合成音频...');
+                
+                const composedBuffer = await this.composeAudio(false);
+                
+                this.updateProgress(50, '编码MP3文件...');
+                const mp3Blob = await this.audioBufferToMp3(composedBuffer);
+                
+                this.updateProgress(100, '合成完成！');
+                this.downloadFile(mp3Blob, 'podcast_composed.mp3');
+                
+                setTimeout(() => this.showProgress(false), 1500);
+                this.showStatus('success', 'MP3文件已生成并开始下载！');
+            } catch (error) {
+                this.showProgress(false);
+                this.showStatus('error', '合成失败：' + error.message);
+            }
+        }
+
+        async composeAudio(isPreview = false) {
+            const introBuffer = this.audioBuffers.intro;
+            const mainBuffer = this.audioBuffers.main;
+            const outroBuffer = this.audioBuffers.outro;
+            
+            const introDelay = parseFloat(document.getElementById('introDelay').value);
+            const fadeTime = parseFloat(document.getElementById('fadeTime').value);
+            
+            // 计算总时长 - 修正片尾开始时间逻辑
+            // 主音频的实际结束时间是：introDelay + mainBuffer.duration
+            const mainActualEndTime = introDelay + mainBuffer.duration;
+            const outroStartTime = fadeTime > 0 ? mainActualEndTime - fadeTime : mainActualEndTime;
+            const totalDuration = Math.max(
+                introBuffer.duration,
+                mainActualEndTime,
+                outroStartTime + outroBuffer.duration
+            );
+
+            // 创建离线音频上下文
+            const sampleRate = 44100;
+            const channels = 2;
+            const offlineContext = new OfflineAudioContext(
+                channels,
+                totalDuration * sampleRate,
+                sampleRate
+            );
+
+            // 创建音频源
+            const introSource = offlineContext.createBufferSource();
+            const mainSource = offlineContext.createBufferSource();
+            const outroSource = offlineContext.createBufferSource();
+
+            introSource.buffer = introBuffer;
+            mainSource.buffer = mainBuffer;
+            outroSource.buffer = outroBuffer;
+
+            // 创建增益节点
+            const introGain = offlineContext.createGain();
+            const mainGain = offlineContext.createGain();
+            const outroGain = offlineContext.createGain();
+
+            // 设置音量变化曲线
+            if (fadeTime > 0) {
+                // 有叠化效果的处理
+                this.setupFadeGainCurves(introGain, mainGain, outroGain, introDelay, fadeTime, outroStartTime, introBuffer.duration);
+            } else {
+                // 无叠化效果，直接拼接
+                this.setupDirectConcatenation(introGain, mainGain, outroGain, introDelay, outroStartTime, introBuffer.duration);
+            }
+
+            // 连接音频图
+            introSource.connect(introGain);
+            mainSource.connect(mainGain);
+            outroSource.connect(outroGain);
+
+            introGain.connect(offlineContext.destination);
+            mainGain.connect(offlineContext.destination);
+            outroGain.connect(offlineContext.destination);
+
+            // 开始播放
+            introSource.start(0);
+            mainSource.start(introDelay);
+            outroSource.start(outroStartTime);
+
+            // 渲染音频
+            return await offlineContext.startRendering();
+        }
+
+        setupFadeGainCurves(introGain, mainGain, outroGain, introDelay, fadeTime, outroStartTime, introDuration) {
+            // 片头音量设置
+            introGain.gain.setValueAtTime(1, 0);
+            if (introDelay < introDuration) {
+                // 片头在主音频开始时逐渐减弱
+                introGain.gain.linearRampToValueAtTime(0.3, introDelay);
+                introGain.gain.linearRampToValueAtTime(0, introDelay + fadeTime);
+            }
+
+            // 主音频音量设置
+            mainGain.gain.setValueAtTime(0, 0);
+            mainGain.gain.setValueAtTime(0, introDelay);
+            mainGain.gain.linearRampToValueAtTime(1, introDelay + fadeTime);
+            
+            // 在片尾开始时渐弱
+            if (outroStartTime > introDelay) {
+                mainGain.gain.setValueAtTime(1, outroStartTime);
+                mainGain.gain.linearRampToValueAtTime(0.2, outroStartTime + fadeTime);
+            }
+
+            // 片尾音量设置
+            outroGain.gain.setValueAtTime(0, 0);
+            outroGain.gain.setValueAtTime(0, outroStartTime);
+            outroGain.gain.linearRampToValueAtTime(1, outroStartTime + fadeTime);
+        }
+
+        setupDirectConcatenation(introGain, mainGain, outroGain, introDelay, outroStartTime, introDuration) {
+            // 无叠化效果，直接拼接
+            introGain.gain.setValueAtTime(1, 0);
+            if (introDelay < introDuration) {
+                introGain.gain.linearRampToValueAtTime(0.3, introDelay);
+                introGain.gain.setValueAtTime(0, introDelay + 0.1); // 快速切换
+            }
+
+            // 主音频
+            mainGain.gain.setValueAtTime(0, 0);
+            mainGain.gain.setValueAtTime(1, introDelay);
+            
+            // 片尾直接拼接 - 修正：只在片尾开始时间才有音量
+            outroGain.gain.setValueAtTime(0, 0);
+            outroGain.gain.setValueAtTime(1, outroStartTime);
+        }
+
+        audioBufferToWav(audioBuffer) {
+            const numberOfChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numberOfChannels * bytesPerSample;
+            const byteRate = sampleRate * blockAlign;
+            const dataSize = audioBuffer.length * blockAlign;
+            const bufferSize = 44 + dataSize;
+
+            const arrayBuffer = new ArrayBuffer(bufferSize);
+            const view = new DataView(arrayBuffer);
+
+            // WAV文件头
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, bufferSize - 8, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numberOfChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            // 写入音频数据
+            let offset = 44;
+            for (let i = 0; i < audioBuffer.length; i++) {
+                for (let channel = 0; channel < numberOfChannels; channel++) {
+                    const sample = audioBuffer.getChannelData(channel)[i];
+                    const intSample = Math.max(-1, Math.min(1, sample)) * 0x7FFF;
+                    view.setInt16(offset, intSample, true);
+                    offset += 2;
+                }
+            }
+
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        async audioBufferToMp3(audioBuffer) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const channels = audioBuffer.numberOfChannels;
+                    const sampleRate = audioBuffer.sampleRate;
+                    const kbps = parseInt(document.getElementById('mp3Quality').value);
+                    
+                    const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
+                    const mp3Data = [];
+
+                    const left = audioBuffer.getChannelData(0);
+                    const right = channels > 1 ? audioBuffer.getChannelData(1) : null;
+
+                    const leftInt16 = new Int16Array(left.length);
+                    const rightInt16 = right ? new Int16Array(right.length) : null;
+
+                    // 转换为16位整数
+                    for (let i = 0; i < left.length; i++) {
+                        leftInt16[i] = Math.max(-1, Math.min(1, left[i])) * 0x7FFF;
+                        if (rightInt16) {
+                            rightInt16[i] = Math.max(-1, Math.min(1, right[i])) * 0x7FFF;
+                        }
+                    }
+
+                    // 分块编码
+                    const blockSize = 1152;
+                    const totalBlocks = Math.ceil(leftInt16.length / blockSize);
+                    
+                    for (let i = 0; i < leftInt16.length; i += blockSize) {
+                        const leftChunk = leftInt16.subarray(i, i + blockSize);
+                        const rightChunk = rightInt16 ? rightInt16.subarray(i, i + blockSize) : null;
+
+                        const mp3buf = rightChunk ? 
+                            mp3encoder.encodeBuffer(leftChunk, rightChunk) :
+                            mp3encoder.encodeBuffer(leftChunk);
+
+                        if (mp3buf.length > 0) {
+                            mp3Data.push(mp3buf);
+                        }
+
+                        // 更新进度
+                        const currentBlock = Math.floor(i / blockSize) + 1;
+                        const progress = Math.floor((currentBlock / totalBlocks) * 50) + 50;
+                        this.updateProgress(progress, '编码MP3文件...');
+                    }
+
+                    // 完成编码
+                    const mp3buf = mp3encoder.flush();
+                    if (mp3buf.length > 0) {
+                        mp3Data.push(mp3buf);
+                    }
+
+                    const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+                    resolve(blob);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        showProgress(show, message = '') {
+            const container = document.getElementById('progressContainer');
+            container.style.display = show ? 'block' : 'none';
+            if (show) {
+                this.updateProgress(0, message);
+            }
+        }
+
+        updateProgress(percent, message = '') {
+            document.getElementById('progressFill').style.width = percent + '%';
+            const progressText = document.getElementById('progressText');
+            if (message) {
+                progressText.textContent = message + ' (' + percent + '%)';
+            } else {
+                progressText.textContent = percent + '%';
+            }
+        }
+
+        showStatus(type, message) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.className = 'status-message ' + type;
+            statusElement.textContent = message;
+            statusElement.style.display = 'block';
+            
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    // 全局函数和初始化
+    let composer;
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        composer = new EnhancedPodcastComposer();
+        
+        // 初始化时更新叠化提示
+        composer.updateFadeHint(2);
+    });
+
+    function previewComposition() {
+        composer.previewComposition();
+    }
+
+    function composePodcast() {
+        composer.composePodcast();
+    }
+
+    function stopPreview() {
+        composer.stopPreview();
+    }
+
+    // 全局错误处理
+    window.addEventListener('error', (event) => {
+        console.error('全局错误:', event.error);
+        if (composer) {
+            composer.showStatus('error', '发生意外错误，请刷新页面重试');
+        }
+    });
+
+    // 防止意外离开页面时的提醒
+    window.addEventListener('beforeunload', (event) => {
+        const progressContainer = document.getElementById('progressContainer');
+        if (progressContainer && progressContainer.style.display === 'block') {
+            event.preventDefault();
+            event.returnValue = '音频正在处理中，确定要离开吗？';
+        }
+    });
+    </script>
+</body>
+</html>
