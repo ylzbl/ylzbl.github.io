@@ -343,7 +343,7 @@
             </div>
 
             <div class="tip" id="tipText">
-                请将bg.png和logo.png放在同一文件夹下。<br>
+                请将bg.jpg和logo.png放在同一文件夹下。<br>
                 Logo显示为画布宽度40%，上下边距20%，图片填满画布宽度。<br>
                 每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
                 <small>如遇跨域问题，应用会自动尝试网络备用图片。</small>
@@ -443,7 +443,7 @@
             const tipElement = document.getElementById('tipText');
             if (currentCoverType === 'wechat') {
                 tipElement.innerHTML = `
-                    请将bg.png和logo.png放在同一文件夹下。<br>
+                    请将bg.jpg和logo.png放在同一文件夹下。<br>
                     Logo显示为画布宽度40%，上下边距20%，图片填满画布宽度。<br>
                     每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
                     <small>如遇跨域问题，应用会自动尝试网络备用图片。</small>
@@ -507,13 +507,13 @@
             };
             
             // 尝试加载本地文件，如果失败则使用网络备用方案
-            bgImage.src = './bg.png';
+            bgImage.src = './bg.jpg';
             logoImage.src = './logo.png';
             
             // 如果本地文件加载失败，尝试网络备用链接
             setTimeout(() => {
                 if (!bgImage.complete || bgImage.naturalWidth === 0) {
-                    bgImage.src = 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/lishuhang/img/refs/heads/master/2025/06/yz-vidcover/bg.png';
+                    bgImage.src = 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/lishuhang/img/refs/heads/master/2025/06/yz-vidcover/bg.jpg';
                 }
                 if (!logoImage.complete || logoImage.naturalWidth === 0) {
                     logoImage.src = 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/lishuhang/img/refs/heads/master/2025/06/yz-vidcover/logo.png';
@@ -671,14 +671,14 @@
 
         // 绘制微信视频号封面
         function drawWechatCover() {
-            // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.png
+            // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.jpg
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#FF8C69');
             gradient.addColorStop(1, '#FFE4B5');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 叠加bg.png背景
+            // 叠加bg.jpg背景
             if (bgImage.complete && bgImage.naturalWidth > 0) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             }
@@ -750,14 +750,14 @@
 
         // 绘制B站封面
         function drawBilibiliCover() {
-            // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.png
+            // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.jpg
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#FF8C69');
             gradient.addColorStop(1, '#FFE4B5');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 叠加bg.png背景
+            // 叠加bg.jpg背景
             if (bgImage.complete && bgImage.naturalWidth > 0) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             }
