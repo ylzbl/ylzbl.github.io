@@ -5,10 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>视频封面生成器</title>
     <style>
+        /* 本地字体加载 - 支持多种字重 */
         @font-face {
             font-family: 'AliPuHui';
-            src: url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2');
+            src: url('./AliPuHui-Regular.woff2') format('woff2'),
+                 url('./AliPuHui-Regular.woff') format('woff'),
+                 url('./AliPuHui-Regular.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AliPuHui';
+            src: url('./AliPuHui-Bold.woff2') format('woff2'),
+                 url('./AliPuHui-Bold.woff') format('woff'),
+                 url('./AliPuHui-Bold.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2');
             font-weight: bold;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AliPuHui';
+            src: url('./AliPuHui-Light.woff2') format('woff2'),
+                 url('./AliPuHui-Light.woff') format('woff'),
+                 url('./AliPuHui-Light.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2');
+            font-weight: 300;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'AliPuHui';
+            src: url('./AliPuHui-Medium.woff2') format('woff2'),
+                 url('./AliPuHui-Medium.woff') format('woff'),
+                 url('./AliPuHui-Medium.ttf') format('truetype'),
+                 url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2');
+            font-weight: 500;
             font-display: swap;
         }
 
@@ -137,6 +171,19 @@
             margin-bottom: 20px;
             font-size: 12px;
             line-height: 1.4;
+        }
+
+        /* 字数超限警告横幅 */
+        .warning-banner {
+            background: #ffeb3b;
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
         }
 
         /* 单选按钮样式 */
@@ -346,7 +393,8 @@
                 请将bg.jpg和logo.png放在同一文件夹下。<br>
                 Logo显示为画布宽度40%，上下边距20%，图片填满画布宽度。<br>
                 每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
-                <small>如遇跨域问题，应用会自动尝试网络备用图片。</small>
+                <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
+                <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
             </div>
 
             <div class="control-group">
@@ -363,17 +411,16 @@
             <div class="control-group" id="topTextGroup">
                 <label id="topTextLabel">上方文字（黄底黑字）：</label>
                 <input type="text" id="topText" placeholder="请输入上方文字" maxlength="26" oninput="updateText()">
-                <div class="char-count">
-                    <span id="topTextCount">0</span>/26字符 (中文<span id="topTextChinese">0</span>字，英文<span id="topTextEnglish">0</span>字)
-                </div>
             </div>
 
             <div class="control-group" id="bottomTextGroup">
                 <label id="bottomTextLabel">下方文字（黑底白字）：</label>
                 <input type="text" id="bottomText" placeholder="请输入下方文字" maxlength="26" oninput="updateText()">
-                <div class="char-count">
-                    <span id="bottomTextCount">0</span>/26字符 (中文<span id="bottomTextChinese">0</span>字，英文<span id="bottomTextEnglish">0</span>字)
-                </div>
+            </div>
+
+            <!-- 字数超限警告横幅 -->
+            <div id="warningBanner" class="warning-banner">
+                注意短标题输入字数不要过多（一般不超过10字）
             </div>
 
             <div class="scale-info" id="scaleInfo">
@@ -446,14 +493,16 @@
                     请将bg.jpg和logo.png放在同一文件夹下。<br>
                     Logo显示为画布宽度40%，上下边距20%，图片填满画布宽度。<br>
                     每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
-                    <small>如遇跨域问题，应用会自动尝试网络备用图片。</small>
+                    <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
+                    <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
                 `;
             } else {
                 tipElement.innerHTML = `
                     B站封面尺寸1920x1080，不显示logo。<br>
                     文字布局为左右一行，图片保持16:9比例居中显示。<br>
                     每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
-                    <small>如遇跨域问题，应用会自动尝试网络备用图片。</small>
+                    <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
+                    <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
                 `;
             }
         }
@@ -634,15 +683,6 @@
             const topStats = countCharacters(topText);
             const bottomStats = countCharacters(bottomText);
             
-            // 更新字符计数显示
-            document.getElementById('topTextCount').textContent = topStats.total;
-            document.getElementById('topTextChinese').textContent = topStats.chinese;
-            document.getElementById('topTextEnglish').textContent = topStats.english;
-            
-            document.getElementById('bottomTextCount').textContent = bottomStats.total;
-            document.getElementById('bottomTextChinese').textContent = bottomStats.chinese;
-            document.getElementById('bottomTextEnglish').textContent = bottomStats.english;
-            
             // 计算缩放比例
             const maxWidth = Math.max(topStats.effectiveWidth, bottomStats.effectiveWidth);
             let scale = 1;
@@ -654,7 +694,24 @@
             document.getElementById('scaleInfo').textContent = 
                 `当前缩放: ${Math.round(scale * 100)}% (最宽行: ${maxWidth}字符宽度)`;
             
+            // 检查标题字数限制并显示警告
+            checkTitleLength(topText.length, bottomText.length);
+            
             drawCanvas();
+        }
+
+        // 检查标题字数限制
+        function checkTitleLength(topLength, bottomLength) {
+            const warningBanner = document.getElementById('warningBanner');
+            
+            // 检查是否需要显示警告（两行总字符数>=10）
+            const totalLength = topLength + bottomLength;
+            
+            if (totalLength > 10) {
+                warningBanner.style.display = 'block';
+            } else {
+                warningBanner.style.display = 'none';
+            }
         }
 
         // 绘制画布
@@ -700,7 +757,7 @@
                 logoBottomY = canvas.height * 0.12 + logoHeight + 40;
             }
             
-            // 绘制中间图片区域 - 修复bug1：保持原长宽比缩放使其占满宽度，上下切边
+            // 绘制中间图片区域 - 修复细长图片显示问题
             const imageAreaX = 0;
             const imageAreaY = logoBottomY;
             const imageAreaWidth = canvas.width;
@@ -715,17 +772,27 @@
                 ctx.rect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.clip();
                 
-                // 计算缩放比例 - 保持原长宽比，占满宽度
+                // 计算缩放比例 - 修复细长图片问题
                 const imgAspect = contentImage.naturalWidth / contentImage.naturalHeight;
                 const areaAspect = imageAreaWidth / imageAreaHeight;
                 
                 let drawWidth, drawHeight, drawX, drawY;
                 
-                // 始终以宽度为准，保证占满宽度
-                drawWidth = imageAreaWidth;
-                drawHeight = drawWidth / imgAspect;
-                drawX = imageAreaX;
-                drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2; // 垂直居中
+                if (imgAspect > areaAspect) {
+                    // 图片比显示区域更宽（包括细长图片如20:9）
+                    // 以高度为准，保证填满高度，宽度居中裁剪
+                    drawHeight = imageAreaHeight;
+                    drawWidth = drawHeight * imgAspect;
+                    drawX = imageAreaX + (imageAreaWidth - drawWidth) / 2;
+                    drawY = imageAreaY;
+                } else {
+                    // 图片比显示区域更高（竖图）
+                    // 以宽度为准，保证填满宽度，高度居中裁剪
+                    drawWidth = imageAreaWidth;
+                    drawHeight = drawWidth / imgAspect;
+                    drawX = imageAreaX;
+                    drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2;
+                }
                 
                 ctx.drawImage(contentImage, drawX, drawY, drawWidth, drawHeight);
                 
@@ -764,7 +831,7 @@
             
             // B站封面不显示logo
             
-            // 绘制中间图片区域 - 修复bug1：保持原长宽比缩放使其占满宽度，上下切边
+            // 绘制中间图片区域 - 修复细长图片显示问题
             const imageAreaX = 0;
             const imageAreaY = 0;
             const imageAreaWidth = canvas.width;
@@ -779,17 +846,27 @@
                 ctx.rect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.clip();
                 
-                // 计算缩放比例 - 保持原长宽比，占满宽度
+                // 计算缩放比例 - 修复细长图片问题
                 const imgAspect = contentImage.naturalWidth / contentImage.naturalHeight;
                 const areaAspect = imageAreaWidth / imageAreaHeight;
                 
                 let drawWidth, drawHeight, drawX, drawY;
                 
-                // 始终以宽度为准，保证占满宽度
-                drawWidth = imageAreaWidth;
-                drawHeight = drawWidth / imgAspect;
-                drawX = imageAreaX;
-                drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2; // 垂直居中
+                if (imgAspect > areaAspect) {
+                    // 图片比显示区域更宽（包括细长图片如20:9）
+                    // 以高度为准，保证填满高度，宽度居中裁剪
+                    drawHeight = imageAreaHeight;
+                    drawWidth = drawHeight * imgAspect;
+                    drawX = imageAreaX + (imageAreaWidth - drawWidth) / 2;
+                    drawY = imageAreaY;
+                } else {
+                    // 图片比显示区域更高（竖图）
+                    // 以宽度为准，保证填满宽度，高度居中裁剪
+                    drawWidth = imageAreaWidth;
+                    drawHeight = drawWidth / imgAspect;
+                    drawX = imageAreaX;
+                    drawY = imageAreaY + (imageAreaHeight - drawHeight) / 2;
+                }
                 
                 ctx.drawImage(contentImage, drawX, drawY, drawWidth, drawHeight);
                 
@@ -922,7 +999,7 @@
             }
         }
 
-        // 绘制B站文字框（左右布局，挨在一起，位于下1/4位置）
+        // 绘制B站文字框（左右布局）
         function drawBilibiliTextBoxes() {
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
@@ -941,40 +1018,39 @@
             
             // 基本设置
             const baseFontSize = 120 * scale;
-            const borderWidth = 15;
-            const padding = 20;
+            const textY = canvas.height * 0.85;
             
             ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             
-            // 计算文字框位置 - 位于画幅高度的下1/4位置，与底部留间隙
-            const bottomMargin = 60; // 与底部的间隙
-            const textY = canvas.height - canvas.height / 4; // 下1/4位置
+            const borderWidth = 15;
+            const padding = 20;
+            const gap = 40; // 两个文字框之间的间距
             
             // 计算两个文字框的尺寸
-            let leftTextWidth = 0, rightTextWidth = 0;
+            let topTextWidth = 0, bottomTextWidth = 0;
             const textHeight = baseFontSize * 1.2;
             
             if (topText) {
-                leftTextWidth = ctx.measureText(topText).width;
+                topTextWidth = ctx.measureText(topText).width;
             }
             
             if (bottomText) {
-                rightTextWidth = ctx.measureText(bottomText).width;
+                bottomTextWidth = ctx.measureText(bottomText).width;
             }
             
-            // 计算总宽度和间距，让两个框挨在一起
-            const totalTextWidth = leftTextWidth + rightTextWidth + padding * 4; // 两个框的内边距
-            const startX = (canvas.width - totalTextWidth) / 2; // 居中开始位置
+            // 计算总宽度和起始位置
+            const totalWidth = (topText ? topTextWidth + padding * 2 : 0) + 
+                              (bottomText ? bottomTextWidth + padding * 2 : 0) + 
+                              (topText && bottomText ? gap : 0);
+            let currentX = (canvas.width - totalWidth) / 2;
             
-            let currentX = startX;
-            
-            // 绘制左侧文字（原上方文字）
+            // 绘制左侧文字 - 底色#FFA349，文字#000，左和上border 15px #FFF
             if (topText) {
                 const boxX = currentX;
                 const boxY = textY - textHeight / 2 - padding;
-                const boxWidth = leftTextWidth + padding * 2;
+                const boxWidth = topTextWidth + padding * 2;
                 const boxHeight = textHeight + padding * 2;
                 
                 // 绘制文字背景
@@ -992,14 +1068,14 @@
                 ctx.fillStyle = '#000000';
                 ctx.fillText(topText, boxX + padding, textY);
                 
-                currentX += boxWidth; // 紧挨着，不加间距
+                currentX += boxWidth + gap;
             }
             
-            // 绘制右侧文字（原下方文字）
+            // 绘制右侧文字 - 底色#000，文字#FFF，右和下border 15px #FFA349
             if (bottomText) {
                 const boxX = currentX;
                 const boxY = textY - textHeight / 2 - padding;
-                const boxWidth = rightTextWidth + padding * 2;
+                const boxWidth = bottomTextWidth + padding * 2;
                 const boxHeight = textHeight + padding * 2;
                 
                 // 绘制文字背景
@@ -1044,8 +1120,9 @@
                 <input type="file" class="file-input" id="imageFile" accept="image/*">
             `;
             
-            // 隐藏图片信息
+            // 隐藏图片信息和警告横幅
             document.getElementById('imageInfo').style.display = 'none';
+            document.getElementById('warningBanner').style.display = 'none';
             
             // 重新绑定事件
             setupImageUpload();
@@ -1063,4 +1140,3 @@
     </script>
 </body>
 </html>
-
