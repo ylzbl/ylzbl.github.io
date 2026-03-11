@@ -9,13 +9,17 @@
         /* ================= 字体定义 ================= */
         @font-face {
             font-family: 'Smiley Sans';
-            src: local('Smiley Sans'), local('得意黑'), url('smiley-sans.woff2') format('woff2');
+            src: url('./SmileySans-Oblique.ttf.woff2') format('woff2'),
+                 local('Smiley Sans'), local('得意黑');
             font-weight: normal; font-style: normal;
+            font-display: swap;
         }
         @font-face {
             font-family: 'Alibaba PuHuiTi';
-            src: local('Alibaba PuHuiTi'), local('阿里巴巴普惠体'), url('alibaba-puhuiti-regular.woff2') format('woff2');
+            src: url('./AlibabaPuHuiTi-3-55-Regular.woff') format('woff'),
+                 local('Alibaba PuHuiTi'), local('阿里巴巴普惠体');
             font-weight: normal; font-style: normal;
+            font-display: swap;
         }
 
         /* ================= CSS 变量 (主题色系) ================= */
