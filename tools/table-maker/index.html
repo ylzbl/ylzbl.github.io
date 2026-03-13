@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业VI表格与图表自动化渲染工具</title>
+    
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. 核心功能库依赖 (CDNs) -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://unpkg.com/chroma-js@2.4.2/chroma.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        /* =========================================
+           字体声明 (纯本地引用，确保文件在同一目录)
+           ========================================= */
+        @font-face {
+            font-family: 'Alibaba PuHuiTi';
+            src: url('AlibabaPuHuiTi-3-55-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Alibaba PuHuiTi';
+            src: url('AlibabaPuHuiTi-3-115-Black.woff2') format('woff2');
+            font-weight: 900;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        body { 
+            font-family: 'Alibaba PuHuiTi', 'Noto Sans SC', sans-serif; 
+            background-color: #efefef; 
+        }
+
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* =========================================
+           表格模式专属样式 (复刻自 table.html)
+           ========================================= */
+        .custom-table { width: 100%; border-collapse: collapse; margin: 0 auto; text-align: center; position: relative; z-index: 2; }
+        .custom-table th { padding: 10px; font-size: 13px; font-weight: 400; color: #666666; border-top: 1px solid #333333; border-bottom: 1px solid #333333; }
+        .custom-table td { padding: 12px 10px; font-size: 14px; font-weight: 900; color: #333333; border: none; }
+        .custom-table tbody tr:nth-child(even) { background-color: #EEEEEE; }
+        .custom-table .series-name { font-size: 15px; font-weight: 900; }
+        .custom-table .studio { font-size: 12px; font-weight: 400; color: #666666; margin-top: 4px; }
+
+        /* =========================================
+           海报容器 1:1 复刻区 (将被导出为图片的区域)
+           ========================================= */
+        #poster-wrapper {
+            width: 900px; /* 严格锁定 900px */
+            max-width: none;
+            background-color: #F5F5F5;
+            position: relative;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            /* 初始状态隐藏，等数据加载后显示 */
+            display: none; 
+            flex-direction: column;
+        }
+
+        /* 顶部标题 - 左对齐 */
+        .poster-header {
+            background-color: #222222;
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+        }
+        .poster-header h1 {
+            font-size: 35px; /* 直接使用换算后的字号 (原54px * 0.65)，弃用 transform 防止截图错位 */
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: -1.5px;
+            line-height: 1;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        /* 图表/表格区域 */
+        .chart-area {
+            background-color: #F5F5F5;
+            position: relative;
+            min-height: 480px; /* 改为 min-height 以适应长表格 */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 动态内容挂载点 */
+        .chart-content {
+            flex: 1;
+            position: relative;
+            z-index: 2; /* 确保内容在水印上方 */
+            width: 100%;
+            padding: 20px 0; /* 给上下一点呼吸感 */
+        }
+
+        /* 浮水印 - 居中 (弃用 transform 防止截图错位) */
+        .watermark {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1; /* 垫底 */
+            width: 90%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        /* 底部备注信息 */
+        .remarks {
+            text-align: center;
+            color: #999999;
+            font-size: 13px;
+            padding: 10px 0 16px 0;
+            background-color: transparent;
+            z-index: 2;
+        }
+
+        /* 底部 Logo 栏 */
+        .poster-footer {
+            background-color: #222222;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .footer-logo {
+            height: 40px;
+            width: auto;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- 左侧 设置面板 -->
+    <aside class="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col h-auto md:h-full z-10 shadow-md overflow-y-auto no-scrollbar shrink-0">
+        <div class="p-5 border-b border-gray-100">
+            <h1 class="text-xl font-black tracking-tight text-gray-800">VI 渲染工具</h1>
+            <p class="text-xs text-gray-500 mt-1 font-bold">Excel 转高清 VI 样式图片</p>
+        </div>
+
+        <div class="p-5 flex-1 space-y-6">
+            <!-- 1. 数据源上传 -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">1. 数据源 (Excel/CSV)</label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-28 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-8 h-8 mb-2 text-gray-400" fill="none" viewBox="0 0 20 16" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+                            <p class="mb-1 text-sm text-gray-500"><span class="font-bold">点击上传</span> 或拖拽文件</p>
+                        </div>
+                        <input id="dropzone-file" type="file" class="hidden" accept=".xlsx, .xls, .csv" />
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. 渲染模式 -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">2. 渲染模式</label>
+                <select id="render-mode" class="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-gray-800 focus:border-gray-800 font-medium">
+                    <option value="table">纯表格模式 (长图排版)</option>
+                    <option value="chart">柱折混合图表 (多维数据)</option>
+                </select>
+            </div>
+
+            <!-- 3. VI 设置 -->
+            <div class="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h3 class="text-sm font-bold text-gray-700">3. VI 与文案设置</h3>
+                
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1 font-bold">主标题</label>
+                    <input type="text" id="title-main" value="中韩娱公司近三年营业收入增长情况" class="w-full border border-gray-300 rounded p-1.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1 font-bold">高亮关键字 (按空格或回车添加)</label>
+                    <div class="flex flex-col gap-2">
+                        <input type="text" id="keyword-input" placeholder="输入需高亮的词..." class="w-full border border-gray-300 rounded p-1.5 text-sm">
+                        <!-- 动态关键字标签容器 -->
+                        <div id="keyword-tags" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1 font-bold">底部备注信息</label>
+                    <input type="text" id="remarks-input" value="数据来源：Capital IQ" class="w-full border border-gray-300 rounded p-1.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1 font-bold">公司强调色 (主色)</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="color" id="vi-color" value="#FF5A5A" class="h-8 w-8 rounded cursor-pointer border-0 p-0">
+                        <span id="color-hex" class="text-xs font-mono text-gray-500 font-bold">#FF5A5A</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-5 border-t border-gray-200 bg-white">
+            <button id="btn-export" disabled class="w-full bg-[#222222] hover:bg-black text-white font-black py-3 px-4 rounded-lg transition shadow-md flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                导出高清海报
+            </button>
+        </div>
+    </aside>
+
+    <!-- 右侧 预览区 -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 flex justify-center items-start bg-[#efefef]">
+        
+        <!-- 空状态提示 (初始显示) -->
+        <div id="empty-placeholder" class="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 mt-20">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            <p class="font-bold tracking-widest">请在左侧上传数据文件以生成预览</p>
+        </div>
+
+        <!-- 海报容器 (严格锁定 900px, 生成图片的目标区域) -->
+        <div id="poster-wrapper">
+            
+            <!-- 顶部标题 -->
+            <div class="poster-header">
+                <h1 id="render-title"></h1>
+            </div>
+
+            <!-- 图表/表格主区域 -->
+            <div class="chart-area">
+                <!-- 浮水印：加入 crossorigin 并强制在出错时清理节点防止污染 Canvas -->
+                <img src="watermark.jpg" alt="水印" class="watermark" crossorigin="anonymous" onerror="this.remove();">
+                
+                <!-- 动态图表/表格注入区 -->
+                <div class="chart-content">
+                    <div id="table-container" class="w-full" style="display: none;"></div>
+                    <div id="echarts-container" class="w-full h-full min-h-[400px]" style="display: none;"></div>
+                </div>
+
+                <!-- 底部备注信息 -->
+                <div class="remarks" id="render-remarks">数据来源：Capital IQ</div>
+            </div>
+
+            <!-- 底部 Logo 栏 -->
+            <div class="poster-footer">
+                <img src="logo.png" alt="logo" class="footer-logo" crossorigin="anonymous" onerror="this.remove();">
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * 状态与实例管理
+         */
+        const state = {
+            data: [],         
+            mode: 'table',    
+            viColor: '#FF5A5A',
+            title: '中韩娱公司近三年营业收入增长情况',
+            keywords: ['中韩娱'], // 默认高亮的关键字
+            instances: {
+                echart: null
+            }
+        };
+
+        // 转义正则表达式特殊字符
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        /**
+         * 动态渲染主标题与高亮匹配逻辑
+         */
+        function updateTitleRender() {
+            let html = state.title;
+            if (state.keywords.length > 0 && html) {
+                // 按关键字长度降序排序，防止短词（如"营业"）优先匹配从而破坏长词（如"营业收入"）
+                const sortedKeywords = [...state.keywords].sort((a, b) => b.length - a.length);
+                const pattern = new RegExp(`(${sortedKeywords.map(escapeRegExp).join('|')})`, 'g');
+                // 命中后自动注入行内样式
+                html = html.replace(pattern, `<span style="color: ${state.viColor}; transition: color 0.3s ease;">$1</span>`);
+            }
+            document.getElementById('render-title').innerHTML = html;
+        }
+
+        /**
+         * 渲染交互式标签（Tag UI）
+         */
+        function renderTagsUI() {
+            const container = document.getElementById('keyword-tags');
+            container.innerHTML = '';
+            
+            state.keywords.forEach(kw => {
+                const tag = document.createElement('span');
+                tag.className = 'inline-flex items-center px-2 py-1 rounded text-xs font-bold bg-gray-200 text-gray-700';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = kw;
+                
+                const btn = document.createElement('button');
+                btn.className = 'ml-1 text-gray-400 hover:text-red-500 focus:outline-none';
+                btn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+                btn.onclick = () => {
+                    // 删除该关键字并重绘标题
+                    state.keywords = state.keywords.filter(k => k !== kw);
+                    renderTagsUI();
+                    updateTitleRender();
+                };
+
+                tag.appendChild(textSpan);
+                tag.appendChild(btn);
+                container.appendChild(tag);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化标题和标签
+            renderTagsUI();
+            updateTitleRender();
+
+            // UI 绑定：主标题输入
+            document.getElementById('title-main').addEventListener('input', (e) => {
+                state.title = e.target.value;
+                updateTitleRender();
+            });
+
+            // UI 绑定：高亮关键字添加 (响应空格与回车)
+            document.getElementById('keyword-input').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault(); // 阻止默认输入
+                    const val = e.target.value.trim();
+                    if (val && !state.keywords.includes(val)) {
+                        state.keywords.push(val);
+                        renderTagsUI();
+                        updateTitleRender();
+                    }
+                    e.target.value = '';
+                }
+            });
+
+            // UI 绑定：备注信息
+            document.getElementById('remarks-input').addEventListener('input', (e) => {
+                document.getElementById('render-remarks').innerText = e.target.value;
+            });
+            
+            // UI 绑定：VI 颜色
+            document.getElementById('vi-color').addEventListener('input', (e) => {
+                state.viColor = e.target.value;
+                document.getElementById('color-hex').innerText = state.viColor;
+                updateTitleRender(); // 主色改变时，高亮词颜色同步改变
+                if(state.data.length > 0) render(); // 重绘图表主题色
+            });
+
+            // UI 绑定：渲染模式切换
+            document.getElementById('render-mode').addEventListener('change', (e) => {
+                state.mode = e.target.value;
+                if(state.data.length > 0) render();
+            });
+
+            // 文件解析绑定
+            document.getElementById('dropzone-file').addEventListener('change', handleFileUpload);
+            // 导出图片绑定
+            document.getElementById('btn-export').addEventListener('click', exportImage);
+        });
+
+        /**
+         * 处理 Excel/CSV 上传并解析
+         */
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const data = evt.target.result;
+                try {
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "—" });
+                    
+                    if(json.length > 0) {
+                        state.data = json;
+                        // 切换视图状态
+                        document.getElementById('empty-placeholder').style.display = 'none';
+                        document.getElementById('poster-wrapper').style.display = 'flex';
+                        document.getElementById('btn-export').disabled = false;
+                        
+                        // 确保颜色和标题渲染正确
+                        updateTitleRender();
+                        render();
+                    } else {
+                        alert("表格内无有效数据，请检查文件。");
+                    }
+                } catch (error) {
+                    alert("解析文件失败，请确保格式为合法的 xlsx 或 csv。");
+                    console.error(error);
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        /**
+         * 核心渲染路由
+         */
+        function render() {
+            if (state.mode === 'table') {
+                document.getElementById('table-container').style.display = 'block';
+                document.getElementById('echarts-container').style.display = 'none';
+                renderNativeTable();
+            } else {
+                document.getElementById('table-container').style.display = 'none';
+                document.getElementById('echarts-container').style.display = 'block';
+                renderECharts();
+            }
+        }
+
+        /**
+         * 原生 HTML 表格渲染 (完美复刻 table.html 视觉层级)
+         */
+        function renderNativeTable() {
+            const container = document.getElementById('table-container');
+            const keys = Object.keys(state.data[0]);
+            
+            let html = '<table class="custom-table"><thead><tr>';
+            keys.forEach(k => {
+                html += `<th>${k}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            state.data.forEach((row) => {
+                html += `<tr>`;
+                keys.forEach((k, colIndex) => {
+                    let val = row[k] ?? '—';
+                    let cellContent = '';
+                    
+                    // 最后一列使用控制面板设定的 VI 颜色进行高亮
+                    let colorStyle = colIndex === keys.length - 1 ? `color: ${state.viColor};` : '';
+
+                    if (typeof val === 'string' && val.includes('\n')) {
+                        const parts = val.split('\n');
+                        // 匹配并套用 table.html 中富文本对应的 CSS 类
+                        cellContent = `<div class="series-name" style="${colorStyle}">${parts[0]}</div>
+                                       <div class="studio">${parts.slice(1).join('<br>')}</div>`;
+                    } else {
+                        cellContent = `<span style="${colorStyle}">${val}</span>`;
+                    }
+                    html += `<td>${cellContent}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        /**
+         * ECharts 图表引擎渲染
+         */
+        function renderECharts() {
+            const container = document.getElementById('echarts-container');
+            if (state.instances.echart) state.instances.echart.dispose();
+
+            // 固定高度复刻海报质感
+            container.style.height = '420px';
+            state.instances.echart = echarts.init(container);
+
+            const keys = Object.keys(state.data[0]);
+            
+            // 依据主色生成系列调色板 (保证同一实体的颜色统一)
+            const colorPalette = [
+                state.viColor, 
+                '#FF9933', // JYP色 
+                '#999999', // YG色
+                '#33B5E5', // HYBE色
+                chroma(state.viColor).darken(2).hex(),
+                '#8B5CF6',
+                '#10B981'
+            ];
+
+            let xAxisData = [];
+            let series = [];
+            let legendData = [];
+            
+            // 智能推断数据格式：长表格式（包含 '公司' 及 '时间' 字段）vs 宽表格式
+            const isLongFormat = keys.includes('公司') && (keys.includes('时间') || keys.includes('年份'));
+
+            if (isLongFormat) {
+                const timeKey = keys.includes('时间') ? '时间' : '年份';
+                const compKey = '公司';
+                // 找出指标列 (排除时间和公司)
+                const metricKeys = keys.filter(k => k !== timeKey && k !== compKey);
+                const val1Key = metricKeys[0]; // 绝对值指标，如"营业收入"
+                const val2Key = metricKeys[1]; // 百分比指标，如"同比增长率"
+
+                xAxisData = [...new Set(state.data.map(item => String(item[timeKey])))];
+                const companies = [...new Set(state.data.map(item => String(item[compKey])))];
+                legendData = companies;
+
+                // 按公司名称进行维度拆解和颜色绑定
+                companies.forEach((comp, index) => {
+                    const color = colorPalette[index % colorPalette.length];
+                    const compData = state.data.filter(item => String(item[compKey]) === comp);
+                    
+                    const barData = xAxisData.map(time => {
+                        const row = compData.find(item => String(item[timeKey]) === time);
+                        return row ? row[val1Key] : 0;
+                    });
+                    
+                    const lineData = xAxisData.map(time => {
+                        const row = compData.find(item => String(item[timeKey]) === time);
+                        if (!row) return 0;
+                        let val = parseFloat(row[val2Key]);
+                        // 处理原始 CSV 数据中的小数转换为百分比形态 (例如 0.213 -> 21.3)
+                        if (Math.abs(val) < 10 && val !== 0) {
+                            val = val * 100;
+                        }
+                        return val.toFixed(1);
+                    });
+
+                    // 柱状图 (绝对值)
+                    series.push({
+                        name: comp,
+                        type: 'bar',
+                        yAxisIndex: 0,
+                        data: barData,
+                        itemStyle: { color: color },
+                        barMaxWidth: 35
+                    });
+
+                    // 折线图 (百分比) - 名称加空格避免与图例名称合并导致重影
+                    series.push({
+                        name: comp + ' ', 
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: lineData,
+                        itemStyle: {
+                            color: '#F5F5F5',
+                            borderColor: color,
+                            borderWidth: 2.5
+                        },
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        lineStyle: { color: color, width: 2.5 }
+                    });
+                });
+            } else {
+                // 兼容旧版的宽表模式
+                const xAxisKey = keys[0];
+                const metricsKeys = keys.slice(1);
+                xAxisData = state.data.map(item => item[xAxisKey]);
+
+                series = metricsKeys.map((key, index) => {
+                    const isRate = key.includes('增长') || key.includes('率') || key.includes('%') || key.toLowerCase().includes('yoy');
+                    const color = colorPalette[index % colorPalette.length];
+                    
+                    return {
+                        name: key,
+                        type: isRate ? 'line' : 'bar',
+                        yAxisIndex: isRate ? 1 : 0,
+                        data: state.data.map(item => item[key]),
+                        itemStyle: isRate ? {
+                            color: '#F5F5F5',
+                            borderColor: color,
+                            borderWidth: 2.5
+                        } : {
+                            color: color,
+                        },
+                        symbol: isRate ? 'circle' : 'none',
+                        symbolSize: 10,
+                        lineStyle: isRate ? { color: color, width: 2.5 } : undefined,
+                        barMaxWidth: 35
+                    };
+                });
+            }
+
+            const option = {
+                animation: false, // 必须关闭动画，否则截图为空
+                backgroundColor: 'transparent', // 保持透明透出水印
+                tooltip: { trigger: 'axis' },
+                legend: {
+                    top: 0,
+                    data: isLongFormat ? legendData : undefined, // 长表模式下限定显示的图例名称
+                    itemWidth: 12,
+                    itemHeight: 12,
+                    icon: 'rect', // ECharts 默认矩形，折线图会在 formatter 或覆盖中处理
+                    textStyle: { fontFamily: "'Alibaba PuHuiTi', sans-serif", fontSize: 14 }
+                },
+                grid: {
+                    top: 60,
+                    left: 50,
+                    right: 50,
+                    bottom: 30,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: xAxisData,
+                    axisLine: { lineStyle: { color: '#CCCCCC', width: 1 } },
+                    axisLabel: { fontFamily: "'Alibaba PuHuiTi', sans-serif", fontSize: 14, color: '#312e2e', margin: 15 },
+                    axisTick: { show: false }
+                },
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: '(单位:十亿韩元)',
+                        nameTextStyle: { color: '#666666', padding: [0, 20, 0, 0] },
+                        splitLine: { lineStyle: { type: 'dashed', color: '#E0E0E0' } },
+                        axisLabel: { color: '#666666', fontFamily: "'Alibaba PuHuiTi', sans-serif" }
+                    },
+                    {
+                        type: 'value',
+                        name: 'YoY',
+                        nameTextStyle: { color: '#666666', align: 'left' },
+                        splitLine: { show: false },
+                        axisLabel: { color: '#666666', formatter: '{value}%', fontFamily: "'Alibaba PuHuiTi', sans-serif" }
+                    }
+                ],
+                series: series
+            };
+
+            state.instances.echart.setOption(option);
+        }
+
+        /**
+         * 导出图片 (处理跨域、字体加载与多倍率)
+         */
+        function exportImage() {
+            const btn = document.getElementById('btn-export');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> 渲染合成中...';
+            btn.disabled = true;
+
+            const targetDiv = document.getElementById('poster-wrapper');
+            
+            // 确保字体完全渲染完毕后再截图
+            document.fonts.ready.then(() => {
+                html2canvas(targetDiv, {
+                    scale: 2, // 视网膜高清
+                    useCORS: true, 
+                    backgroundColor: null,
+                    logging: false
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    const link = document.createElement('a');
+                    link.download = `VI_Data_Poster_${new Date().getTime()}.png`;
+                    link.href = imgData;
+                    link.click();
+                }).catch(err => {
+                    console.error("导出图片失败:", err);
+                    // 提供专门针对 Tainted Canvas 的引导提示
+                    if (err.name === 'SecurityError' || (err.message && err.message.includes('Tainted'))) {
+                        alert("导出失败：触发浏览器安全限制（Tainted Canvas）。\n\n原因分析：您直接双击打开了本地 HTML 文件 (file://)，由于您使用了本地的图片(水印或Logo)，这被浏览器拦截为不安全的跨域行为。\n\n解决方法：\n1. 使用 VS Code 的 Live Server 插件打开该页面。\n2. 或者将所有文件部署到服务器（如 GitHub Pages）运行。");
+                    } else {
+                        alert("导出失败，请检查浏览器控制台报错。");
+                    }
+                }).finally(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
