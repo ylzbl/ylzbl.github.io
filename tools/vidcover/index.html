@@ -53,7 +53,7 @@
         }
 
         body {
-            font-family: 'AliPuHui', 'Microsoft YaHei', sans-serif;
+            font-family: 'AliPuHui', sans-serif;
             background: #f5f5f5;
             padding: 10px;
         }
@@ -117,12 +117,18 @@
             color: #333;
         }
 
-        .control-group input[type="text"] {
+        .control-group input[type="text"],
+        .control-group textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+            font-family: inherit;
+        }
+
+        .control-group textarea {
+            resize: vertical;
         }
 
         .btn {
@@ -147,6 +153,14 @@
 
         .btn-success:hover {
             background: #1e7e34;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
         }
 
         .char-count {
@@ -216,6 +230,7 @@
 
         .radio-group {
             display: flex;
+            flex-wrap: wrap;
             gap: 20px;
             margin-top: 10px;
         }
@@ -403,6 +418,10 @@
                         <input type="radio" id="vertical" name="coverType" value="vertical" onchange="changeCoverType()">
                         <label for="vertical">竖屏短标题 (透明底PNG)</label>
                     </div>
+                    <div class="radio-option">
+                        <input type="radio" id="credits" name="coverType" value="credits" onchange="changeCoverType()">
+                        <label for="credits">Credits竖屏 (1080x1920)</label>
+                    </div>
                 </div>
             </div>
 
@@ -414,6 +433,7 @@
                 <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
             </div>
 
+            <!-- 标准类型的图片上传区 -->
             <div class="control-group" id="imageUploadGroup">
                 <label>图片上传：</label>
                 <div class="image-upload-area" id="imageUploadArea">
@@ -425,23 +445,57 @@
                 <div id="imageInfo" class="image-info" style="display: none;"></div>
             </div>
 
-            <div class="control-group" id="topTextGroup">
-                <label id="topTextLabel">上方文字（黄底黑字）：</label>
-                <input type="text" id="topText" placeholder="请输入上方文字" maxlength="26" oninput="updateText()">
+            <!-- Credits类型的图片上传区 (专属) -->
+            <div class="control-group" id="creditsImageUploadGroup" style="display: none;">
+                <label>图片上传 (微信文章气泡截图)：</label>
+                <div class="image-upload-area" id="creditsImageUploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">点击或拖拽气泡截图到此处</div>
+                    <div class="upload-hint">支持 JPG、PNG 格式</div>
+                    <input type="file" class="file-input" id="creditsImageFile" accept="image/*">
+                </div>
+                <div id="creditsImageInfo" class="image-info" style="display: none;"></div>
+                <button class="btn btn-secondary" style="margin-top: 10px; font-size: 12px; padding: 5px 10px;" onclick="resetCreditsImage()">恢复默认气泡截图</button>
             </div>
 
-            <div class="control-group" id="bottomTextGroup">
-                <label id="bottomTextLabel">下方文字（黑底白字）：</label>
-                <input type="text" id="bottomText" placeholder="请输入下方文字" maxlength="26" oninput="updateText()">
+            <!-- 标准类型的单行文本输入区 -->
+            <div id="standardTextInputs">
+                <div class="control-group" id="topTextGroup">
+                    <label id="topTextLabel">上方文字（黄底黑字）：</label>
+                    <input type="text" id="topText" placeholder="请输入上方文字" maxlength="26" oninput="updateText()">
+                </div>
+
+                <div class="control-group" id="bottomTextGroup">
+                    <label id="bottomTextLabel">下方文字（黑底白字）：</label>
+                    <input type="text" id="bottomText" placeholder="请输入下方文字" maxlength="26" oninput="updateText()">
+                </div>
+
+                <!-- 字数超限警告横幅 -->
+                <div id="warningBanner" class="warning-banner">
+                    注意短标题输入字数不要过多（一般不超过10字）
+                </div>
+
+                <div class="scale-info" id="scaleInfo">
+                    当前缩放: 100%
+                </div>
             </div>
 
-            <!-- 字数超限警告横幅 -->
-            <div id="warningBanner" class="warning-banner">
-                注意短标题输入字数不要过多（一般不超过10字）
-            </div>
+            <!-- Credits类型的多行文本输入区 -->
+            <div id="creditsTextInputs" style="display: none;">
+                <div class="control-group">
+                    <label>第一行文字（常规体 居中）：</label>
+                    <textarea id="creditsTopText" rows="2" oninput="updateText()">搜索标题看全文
+秒懂更多深度信息</textarea>
+                </div>
 
-            <div class="scale-info" id="scaleInfo">
-                当前缩放: 100%
+                <div class="control-group">
+                    <label>第二行文字（常规体 居中）：</label>
+                    <textarea id="creditsBottomText" rows="6" oninput="updateText()">记者：小娱
+制作：James
+监制：吴立湘
+
+2026.3.22</textarea>
+                </div>
             </div>
 
             <button class="btn btn-success" onclick="downloadImage()">下载封面图片</button>
@@ -461,7 +515,12 @@
         
         let bgImage = new Image();
         let logoImage = new Image();
-        let contentImage = null;
+        let watermarkImage = new Image();
+        let searchImage = new Image(); // 专属气泡默认截图
+        
+        let contentImage = null; // 用于标准视频封面的图片
+        let creditsContentImage = null; // 用于Credits界面的专属上传图片
+        
         let imagesLoaded = 0;
         let currentCoverType = 'wechat';
         
@@ -483,13 +542,72 @@
             },
             vertical: {
                 width: 1080,
-                height: 0, // 动态计算
+                height: 1920, // 固定高度为1920
                 showLogo: false,
                 showBackground: false,
                 transparentBackground: true,
                 textLayout: 'vertical'
+            },
+            credits: {
+                width: 1080,
+                height: 1920,
+                showLogo: true,
+                showBackground: true,
+                textLayout: 'credits'
             }
         };
+
+        // LocalStorage 持久化存储
+        function saveState() {
+            const state = {
+                coverType: currentCoverType,
+                topText: document.getElementById('topText').value,
+                bottomText: document.getElementById('bottomText').value,
+                creditsTopText: document.getElementById('creditsTopText').value,
+                creditsBottomText: document.getElementById('creditsBottomText').value,
+                contentImageData: contentImage ? contentImage.src : null,
+                creditsContentImageData: creditsContentImage ? creditsContentImage.src : null
+            };
+            try {
+                localStorage.setItem('vidcover_state', JSON.stringify(state));
+            } catch (e) {
+                console.warn('保存状态失败(可能是图片尺寸过大限制):', e);
+                // 降级保存：仅保存文本和类型
+                state.contentImageData = null;
+                state.creditsContentImageData = null;
+                try {
+                    localStorage.setItem('vidcover_state', JSON.stringify(state));
+                } catch(e2) {}
+            }
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('vidcover_state');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    
+                    if (state.coverType) {
+                        const radio = document.querySelector(`input[name="coverType"][value="${state.coverType}"]`);
+                        if (radio) radio.checked = true;
+                        currentCoverType = state.coverType;
+                    }
+                    if (state.topText !== undefined) document.getElementById('topText').value = state.topText;
+                    if (state.bottomText !== undefined) document.getElementById('bottomText').value = state.bottomText;
+                    if (state.creditsTopText !== undefined) document.getElementById('creditsTopText').value = state.creditsTopText;
+                    if (state.creditsBottomText !== undefined) document.getElementById('creditsBottomText').value = state.creditsBottomText;
+                    
+                    if (state.contentImageData) {
+                        loadImageFromSrc(state.contentImageData, false);
+                    }
+                    if (state.creditsContentImageData) {
+                        loadCreditsImageFromSrc(state.creditsContentImageData, false);
+                    }
+                }
+            } catch (e) {
+                console.error('读取存储状态失败:', e);
+            }
+        }
 
         // 切换封面类型
         function changeCoverType() {
@@ -505,18 +623,32 @@
             
             // 更新提示文字
             updateTipText();
-            
-            // 更新文字标签
             updateTextLabels();
             
-            // 控制图片上传区域显示
+            // 控制面板区域显示隐藏
             const imageUploadGroup = document.getElementById('imageUploadGroup');
+            const creditsImageUploadGroup = document.getElementById('creditsImageUploadGroup');
+            const standardTextInputs = document.getElementById('standardTextInputs');
+            const creditsTextInputs = document.getElementById('creditsTextInputs');
+
             if (currentCoverType === 'vertical') {
                 imageUploadGroup.style.display = 'none';
+                creditsImageUploadGroup.style.display = 'none';
+                standardTextInputs.style.display = 'block';
+                creditsTextInputs.style.display = 'none';
+            } else if (currentCoverType === 'credits') {
+                imageUploadGroup.style.display = 'none';
+                creditsImageUploadGroup.style.display = 'block';
+                standardTextInputs.style.display = 'none';
+                creditsTextInputs.style.display = 'block';
             } else {
                 imageUploadGroup.style.display = 'block';
+                creditsImageUploadGroup.style.display = 'none';
+                standardTextInputs.style.display = 'block';
+                creditsTextInputs.style.display = 'none';
             }
             
+            saveState();
             // 重新绘制
             drawCanvas();
         }
@@ -539,14 +671,22 @@
                     <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
                     <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
                 `;
-            } else { // vertical
+            } else if (currentCoverType === 'vertical') {
                 tipElement.innerHTML = `
-                    竖屏短标题：透明背景PNG，仅包含两行文字。<br>
+                    竖屏短标题：生成透明背景PNG (1080x1920)。<br>
+                    画面中心自动添加水印，文字默认固定在顶部居中。<br>
                     上方文字：黄底黑字，白边框<br>
                     下方文字：黑底白字，黄边框<br>
                     用于叠加到视频内部遮罩层。<br>
-                    <small>画布高度会根据文字内容自动调整。</small><br>
                     <small>每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。</small>
+                `;
+            } else if (currentCoverType === 'credits') {
+                tipElement.innerHTML = `
+                    Credits竖屏：包含背景、顶部Logo、气泡截图及多行文字排版 (1080x1920)。<br>
+                    内容统一从画面顶部向下排版。<br>
+                    中部可以上传【微信文章气泡截图】，默认最大宽度430px，高度240px，自带右下角45度阴影。<br>
+                    第一行与第二行文字允许自定义并支持多行折行，排版水平居中。<br>
+                    <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
                 `;
             }
         }
@@ -559,95 +699,107 @@
             bottomLabel.textContent = '下方文字（黑底白字）：';
         }
         
-        // 预加载背景和logo
+        // 预加载所有背景、logo、水印及专属气泡图
         function loadBaseImages() {
             bgImage.crossOrigin = 'anonymous';
             logoImage.crossOrigin = 'anonymous';
+            watermarkImage.crossOrigin = 'anonymous';
+            searchImage.crossOrigin = 'anonymous';
             
-            bgImage.onload = function() {
+            const checkDone = () => {
                 imagesLoaded++;
-                if (imagesLoaded >= 2) {
+                if (imagesLoaded >= 4) { // 必须加载完4张图（包括失败跳过）
                     drawCanvas();
                 }
             };
             
-            logoImage.onload = function() {
-                imagesLoaded++;
-                if (imagesLoaded >= 2) {
-                    drawCanvas();
-                }
-            };
+            bgImage.onload = checkDone;
+            logoImage.onload = checkDone;
+            watermarkImage.onload = checkDone;
+            searchImage.onload = checkDone;
             
-            bgImage.onerror = function() {
-                console.log('背景图片加载失败，使用渐变背景作为缺省');
-                imagesLoaded++;
-                if (imagesLoaded >= 2) {
-                    drawCanvas();
-                }
-            };
-            
-            logoImage.onerror = function() {
-                console.log('Logo图片加载失败，跳过logo显示');
-                imagesLoaded++;
-                if (imagesLoaded >= 2) {
-                    drawCanvas();
-                }
-            };
+            bgImage.onerror = () => { console.log('背景图片加载失败'); checkDone(); };
+            logoImage.onerror = () => { console.log('Logo图片加载失败'); checkDone(); };
+            watermarkImage.onerror = () => { console.log('水印图片加载失败'); checkDone(); };
+            searchImage.onerror = () => { console.log('默认气泡图片加载失败，等待尝试Fallback...'); checkDone(); };
             
             // 尝试加载本地文件，如果失败则使用网络备用方案
             bgImage.src = './bg.jpg';
             logoImage.src = './logo.png';
+            watermarkImage.src = './watermark.png';
+            searchImage.src = './search.jpg'; // Credits气泡截图
             
-            // 如果本地文件加载失败，尝试网络备用链接
+            // 如果本地文件加载失败，尝试统一的网络备用链接，并绑定onload确保重绘
             setTimeout(() => {
                 if (!bgImage.complete || bgImage.naturalWidth === 0) {
-                    bgImage.src = 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/ylzbl/ylzbl.github.io/refs/heads/main/tools/vidcover/bg.jpg';
+                    bgImage.onload = drawCanvas;
+                    bgImage.src = 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/bg.jpg';
                 }
                 if (!logoImage.complete || logoImage.naturalWidth === 0) {
-                    logoImage.src = 'https://images.weserv.nl/?url=https://raw.githubusercontent.com/lishuhang/img/refs/heads/master/2025/06/yz-vidcover/logo.png';
+                    logoImage.onload = drawCanvas;
+                    logoImage.src = 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/logo.png';
+                }
+                if (!watermarkImage.complete || watermarkImage.naturalWidth === 0) {
+                    watermarkImage.onload = drawCanvas;
+                    watermarkImage.src = 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/watermark.png';
+                }
+                if (!searchImage.complete || searchImage.naturalWidth === 0) {
+                    searchImage.onload = drawCanvas;
+                    searchImage.src = 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/search.jpg';
                 }
             }, 1000);
         }
 
-        // 图片上传和拖拽功能
+        // ============================================
+        // 图片上传和拖拽功能 (支持多个上传区)
+        // ============================================
         function setupImageUpload() {
-            const uploadArea = document.getElementById('imageUploadArea');
-            const fileInput = document.getElementById('imageFile');
-            const imageInfo = document.getElementById('imageInfo');
+            bindUploadEvents('imageUploadArea', 'imageFile', 'imageInfo', false);
+            bindUploadEvents('creditsImageUploadArea', 'creditsImageFile', 'creditsImageInfo', true);
+        }
+
+        function bindUploadEvents(areaId, inputId, infoId, isCredits) {
+            const uploadArea = document.getElementById(areaId);
+            const fileInput = document.getElementById(inputId);
+
+            if (!uploadArea || !fileInput) return;
+
+            // 清除旧事件
+            const newUploadArea = uploadArea.cloneNode(true);
+            uploadArea.parentNode.replaceChild(newUploadArea, uploadArea);
+            const newFileInput = document.getElementById(inputId);
 
             // 点击上传
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
+            newUploadArea.addEventListener('click', () => {
+                newFileInput.click();
             });
 
             // 文件选择
-            fileInput.addEventListener('change', (e) => {
+            newFileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if (file) {
-                    handleImageFile(file);
-                }
+                if (file) handleFile(file, areaId, inputId, infoId, isCredits);
             });
 
             // 拖拽功能
-            uploadArea.addEventListener('dragover', (e) => {
+            newUploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                uploadArea.classList.add('dragover');
+                newUploadArea.classList.add('dragover');
             });
 
-            uploadArea.addEventListener('dragleave', (e) => {
+            newUploadArea.addEventListener('dragleave', (e) => {
                 e.preventDefault();
-                uploadArea.classList.remove('dragover');
+                newUploadArea.classList.remove('dragover');
             });
 
-            uploadArea.addEventListener('drop', (e) => {
+            newUploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                uploadArea.classList.remove('dragover');
+                newUploadArea.classList.remove('dragover');
                 
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     const file = files[0];
                     if (file.type.startsWith('image/')) {
-                        handleImageFile(file);
+                        handleFile(file, areaId, inputId, infoId, isCredits);
                     } else {
                         alert('请选择图片文件！');
                     }
@@ -655,13 +807,17 @@
             });
         }
 
-        function handleImageFile(file) {
+        function handleFile(file, areaId, inputId, infoId, isCredits) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                loadImageFromSrc(e.target.result);
+                if (isCredits) {
+                    loadCreditsImageFromSrc(e.target.result);
+                } else {
+                    loadImageFromSrc(e.target.result);
+                }
                 
                 // 显示图片信息
-                const imageInfo = document.getElementById('imageInfo');
+                const imageInfo = document.getElementById(infoId);
                 const fileSize = (file.size / 1024 / 1024).toFixed(2);
                 imageInfo.innerHTML = `
                     <strong>已上传：</strong>${file.name}<br>
@@ -670,30 +826,59 @@
                 imageInfo.style.display = 'block';
                 
                 // 更新上传区域显示
-                const uploadArea = document.getElementById('imageUploadArea');
+                const uploadArea = document.getElementById(areaId);
                 uploadArea.innerHTML = `
                     <div class="upload-icon">✅</div>
                     <div class="upload-text">图片已上传</div>
                     <div class="upload-hint">点击重新选择图片</div>
-                    <input type="file" class="file-input" id="imageFile" accept="image/*">
+                    <input type="file" class="file-input" id="${inputId}" accept="image/*">
                 `;
                 
                 // 重新绑定事件
-                setupImageUpload();
+                bindUploadEvents(areaId, inputId, infoId, isCredits);
             };
             reader.readAsDataURL(file);
         }
 
-        function loadImageFromSrc(src) {
+        function loadImageFromSrc(src, save = true) {
             contentImage = new Image();
             contentImage.crossOrigin = 'anonymous';
             contentImage.onload = function() {
+                if (save) saveState();
                 drawCanvas();
             };
             contentImage.onerror = function() {
                 alert('图片加载失败，请检查文件格式');
             };
             contentImage.src = src;
+        }
+
+        function loadCreditsImageFromSrc(src, save = true) {
+            creditsContentImage = new Image();
+            creditsContentImage.crossOrigin = 'anonymous';
+            creditsContentImage.onload = function() {
+                if (save) saveState();
+                drawCanvas();
+            };
+            creditsContentImage.onerror = function() {
+                alert('气泡截图加载失败，请检查文件格式');
+            };
+            creditsContentImage.src = src;
+        }
+
+        // 重置 Credits 专属气泡
+        function resetCreditsImage() {
+            creditsContentImage = null;
+            const creditsUploadArea = document.getElementById('creditsImageUploadArea');
+            creditsUploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">已恢复默认气泡截图</div>
+                <div class="upload-hint">点击或拖拽新气泡截图到此处</div>
+                <input type="file" class="file-input" id="creditsImageFile" accept="image/*">
+            `;
+            document.getElementById('creditsImageInfo').style.display = 'none';
+            bindUploadEvents('creditsImageUploadArea', 'creditsImageFile', 'creditsImageInfo', true);
+            updateText(); // 触发状态存储及界面重绘
         }
 
         // 计算字符数和类型
@@ -716,6 +901,14 @@
 
         // 更新字符计数和缩放信息
         function updateText() {
+            saveState();
+
+            // Credits类型不需要这套标准验证和警告
+            if(currentCoverType === 'credits') {
+                drawCanvas();
+                return;
+            }
+
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
             
@@ -753,20 +946,16 @@
             }
         }
 
-        // 绘制画布
+        // 绘制画布路由
         function drawCanvas() {
             const config = coverConfigs[currentCoverType];
             const canvasContainer = document.querySelector('.canvas-container');
             
             if (currentCoverType === 'vertical') {
-                // 透明背景，只绘制文字
-                canvas.width = config.width;
-                
-                // 设置画布为透明
-                canvas.style.background = 'transparent';
+                // 透明背景
                 canvasContainer.classList.add('transparent-mode');
                 
-                // 绘制竖屏短标题
+                // 绘制竖屏短标题 (1080x1920)
                 drawVerticalShortTitle();
             } else {
                 // 其他类型有背景
@@ -778,13 +967,17 @@
                 
                 if (currentCoverType === 'wechat') {
                     drawWechatCover();
-                } else {
+                } else if (currentCoverType === 'bilibili') {
                     drawBilibiliCover();
+                } else if (currentCoverType === 'credits') {
+                    drawCreditsCover();
                 }
             }
         }
 
-        // 绘制微信视频号封面
+        // ============================================
+        // 1. 微信视频号封面
+        // ============================================
         function drawWechatCover() {
             // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.jpg
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -793,7 +986,6 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 叠加bg.jpg背景
             if (bgImage.complete && bgImage.naturalWidth > 0) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             }
@@ -807,45 +999,35 @@
                 ctx.drawImage(logoImage, logoX, logoY, logoWidth, logoHeight);
             }
             
-            // 计算logo区域高度，用于确定图片区域位置
             let logoBottomY = canvas.height * 0.2;
             if (logoImage.complete && logoImage.naturalWidth > 0) {
                 const logoWidth = canvas.width * 0.4;
                 const logoHeight = (logoImage.naturalHeight / logoImage.naturalWidth) * logoWidth;
-                logoBottomY = canvas.height * 0.12 + logoHeight + 40; // 修复：恢复40px间距
+                logoBottomY = canvas.height * 0.12 + logoHeight + 40; 
             }
 
-            // 绘制中间图片区域
             const imageAreaX = 0;
             const imageAreaY = logoBottomY;
             const imageAreaWidth = canvas.width;
-            const imageAreaHeight = imageAreaWidth * 9 / 16; // 16:9比例
+            const imageAreaHeight = imageAreaWidth * 9 / 16; 
             
             if (contentImage && contentImage.complete) {
-                // 保存当前状态
                 ctx.save();
-                
-                // 设置裁剪区域
                 ctx.beginPath();
                 ctx.rect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.clip();
                 
-                // 计算缩放比例 - 修复细长图片问题
                 const imgAspect = contentImage.naturalWidth / contentImage.naturalHeight;
                 const areaAspect = imageAreaWidth / imageAreaHeight;
                 
                 let drawWidth, drawHeight, drawX, drawY;
                 
                 if (imgAspect > areaAspect) {
-                    // 图片比显示区域更宽（包括细长图片如20:9）
-                    // 以高度为准，保证填满高度，宽度居中裁剪
                     drawHeight = imageAreaHeight;
                     drawWidth = drawHeight * imgAspect;
                     drawX = imageAreaX + (imageAreaWidth - drawWidth) / 2;
                     drawY = imageAreaY;
                 } else {
-                    // 图片比显示区域更高（竖图）
-                    // 以宽度为准，保证填满宽度，高度居中裁剪
                     drawWidth = imageAreaWidth;
                     drawHeight = drawWidth / imgAspect;
                     drawX = imageAreaX;
@@ -853,73 +1035,55 @@
                 }
                 
                 ctx.drawImage(contentImage, drawX, drawY, drawWidth, drawHeight);
-                
-                // 恢复状态
                 ctx.restore();
             } else {
-                // 绘制占位符
                 ctx.fillStyle = '#e0e0e0';
                 ctx.fillRect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.fillStyle = '#999';
-                ctx.font = '32px Arial';
+                ctx.font = `32px 'AliPuHui', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('点击上传图片', 
-                    imageAreaX + imageAreaWidth / 2, 
-                    imageAreaY + imageAreaHeight / 2);
+                ctx.fillText('点击上传图片', imageAreaX + imageAreaWidth / 2, imageAreaY + imageAreaHeight / 2);
             }
 
-            // 绘制文字区域
             drawWechatTextBoxes();
         }
 
-        // 绘制B站封面
+        // ============================================
+        // 2. B站视频封面
+        // ============================================
         function drawBilibiliCover() {
-            // 绘制背景 - 先绘制渐变作为缺省，再叠加bg.jpg
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
             gradient.addColorStop(0, '#FF8C69');
             gradient.addColorStop(1, '#FFE4B5');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // 叠加bg.jpg背景
             if (bgImage.complete && bgImage.naturalWidth > 0) {
                 ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
             }
             
-            // B站封面不显示logo
-            
-            // 绘制中间图片区域 - 修复细长图片显示问题
             const imageAreaX = 0;
             const imageAreaY = 0;
             const imageAreaWidth = canvas.width;
             const imageAreaHeight = canvas.height;
             
             if (contentImage && contentImage.complete) {
-                // 保存当前状态
                 ctx.save();
-                
-                // 设置裁剪区域
                 ctx.beginPath();
                 ctx.rect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.clip();
                 
-                // 计算缩放比例 - 修复细长图片问题
                 const imgAspect = contentImage.naturalWidth / contentImage.naturalHeight;
                 const areaAspect = imageAreaWidth / imageAreaHeight;
-                
                 let drawWidth, drawHeight, drawX, drawY;
                 
                 if (imgAspect > areaAspect) {
-                    // 图片比显示区域更宽（包括细长图片如20:9）
-                    // 以高度为准，保证填满高度，宽度居中裁剪
                     drawHeight = imageAreaHeight;
                     drawWidth = drawHeight * imgAspect;
                     drawX = imageAreaX + (imageAreaWidth - drawWidth) / 2;
                     drawY = imageAreaY;
                 } else {
-                    // 图片比显示区域更高（竖图）
-                    // 以宽度为准，保证填满宽度，高度居中裁剪
                     drawWidth = imageAreaWidth;
                     drawHeight = drawWidth / imgAspect;
                     drawX = imageAreaX;
@@ -927,38 +1091,41 @@
                 }
                 
                 ctx.drawImage(contentImage, drawX, drawY, drawWidth, drawHeight);
-                
-                // 恢复状态
                 ctx.restore();
             } else {
-                // 绘制占位符
                 ctx.fillStyle = '#e0e0e0';
                 ctx.fillRect(imageAreaX, imageAreaY, imageAreaWidth, imageAreaHeight);
                 ctx.fillStyle = '#999';
-                ctx.font = '48px Arial';
+                ctx.font = `48px 'AliPuHui', sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText('点击上传图片', 
-                    imageAreaX + imageAreaWidth / 2, 
-                    imageAreaY + imageAreaHeight / 2);
+                ctx.fillText('点击上传图片', imageAreaX + imageAreaWidth / 2, imageAreaY + imageAreaHeight / 2);
             }
             
-            // 绘制文字区域
             drawBilibiliTextBoxes();
         }
 
-        // 绘制竖屏短标题（透明底）
+        // ============================================
+        // 3. 竖屏短标题 (全屏透明水印)
+        // ============================================
         function drawVerticalShortTitle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (watermarkImage.complete && watermarkImage.naturalWidth > 0) {
+                const wmWidth = canvas.width * 0.6; 
+                const wmHeight = wmWidth * (watermarkImage.naturalHeight / watermarkImage.naturalWidth); 
+                
+                const wmX = (canvas.width - wmWidth) / 2;
+                const wmY = (canvas.height - wmHeight) / 2;
+                
+                ctx.drawImage(watermarkImage, wmX, wmY, wmWidth, wmHeight);
+            }
+            
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
             
-            if (!topText && !bottomText) {
-                // 如果没有文字，设置一个最小高度
-                canvas.height = 200;
-                return;
-            }
+            if (!topText && !bottomText) return;
             
-            // 计算缩放
             const topStats = countCharacters(topText);
             const bottomStats = countCharacters(bottomText);
             const maxWidth = Math.max(topStats.effectiveWidth, bottomStats.effectiveWidth);
@@ -968,18 +1135,16 @@
                 scale = Math.max(0.5, 18 / maxWidth);
             }
             
-            // 基本设置
             const baseFontSize = 85 * scale;
-            const maxTextWidth = canvas.width * 0.8;
+            const maxTextWidth = canvas.width * 0.8; 
             
-            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            ctx.font = `bold ${baseFontSize}px 'AliPuHui', sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             
             const borderWidth = 10;
             const padding = 15;
             
-            // 计算两个文字框的尺寸
             let topTextWidth = 0, topTextHeight = 0;
             let bottomTextWidth = 0, bottomTextHeight = 0;
             
@@ -987,105 +1152,178 @@
                 topTextWidth = Math.min(ctx.measureText(topText).width, maxTextWidth);
                 topTextHeight = baseFontSize * 1.2;
             }
-            
             if (bottomText) {
                 bottomTextWidth = Math.min(ctx.measureText(bottomText).width, maxTextWidth);
                 bottomTextHeight = baseFontSize * 1.2;
             }
             
-            // 计算总高度
-            const totalHeight = (topText ? topTextHeight + padding * 2 : 0) + 
-                               (bottomText ? bottomTextHeight + padding * 2 : 0);
+            let currentY = canvas.width * 0.2; 
             
-            // 设置画布高度（添加上下边距）
-            const margin = 40;
-            canvas.height = totalHeight + margin * 2;
-            
-            // 清除画布（透明）
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 重新设置字体（因为clearRect会重置部分状态）
-            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            
-            let currentY = margin;
-            
-            // 绘制上方文字 - 底色#FFA349，文字#000，左和上border 10px #FFF
             if (topText) {
                 const topX = (canvas.width - topTextWidth) / 2;
-                
                 const boxX = topX - padding;
                 const boxY = currentY;
                 const boxWidth = topTextWidth + padding * 2;
                 const boxHeight = topTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制左边框
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(boxX, boxY, borderWidth, boxHeight);
-                
-                // 绘制上边框
                 ctx.fillRect(boxX, boxY, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#000000';
                 ctx.fillText(topText, topX, boxY + boxHeight / 2);
                 
-                currentY += boxHeight;
+                currentY += boxHeight; 
             }
             
-            // 绘制下方文字 - 底色#000，文字#FFF，右和下border 10px #FFA349
             if (bottomText) {
                 const bottomX = (canvas.width - bottomTextWidth) / 2;
-                
                 const boxX = bottomX - padding;
                 const boxY = currentY;
                 const boxWidth = bottomTextWidth + padding * 2;
                 const boxHeight = bottomTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制右边框
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX + boxWidth - borderWidth, boxY, borderWidth, boxHeight);
-                
-                // 绘制下边框
                 ctx.fillRect(boxX, boxY + boxHeight - borderWidth, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillText(bottomText, bottomX, boxY + boxHeight / 2);
             }
         }
 
-        // 绘制微信视频号文字框（上下布局，挨在一起）
+        // ============================================
+        // 4. Credits竖屏 
+        // ============================================
+        function drawCreditsCover() {
+            // 背景底图和渐变
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#FF8C69');
+            gradient.addColorStop(1, '#FFE4B5');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (bgImage.complete && bgImage.naturalWidth > 0) {
+                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            // 获取Credits对应的文本值并按换行拆分
+            const topTextStr = document.getElementById('creditsTopText').value;
+            const bottomTextStr = document.getElementById('creditsBottomText').value;
+            const topLines = topTextStr ? topTextStr.split('\n') : [];
+            const bottomLines = bottomTextStr ? bottomTextStr.split('\n') : [];
+
+            // 文字行高设定 (明确指定使用常规体 AliPuHui regular)
+            const topFontSize = 45;
+            const topFontLineHeight = 70;
+            const topTextH = topLines.length * topFontLineHeight;
+
+            const bottomFontSize = 40;
+            const bottomFontLineHeight = 60;
+
+            // 版块间隔距离
+            const gapLogoText = 70;
+            const gapTextImg = 70;
+            const gapImgText = 70;
+
+            // Y轴起始位置：保证画面顶端对齐，设定为宽度20% (与竖屏短标题一致)
+            let currentY = canvas.width * 0.2; 
+
+            // 1. 绘制顶部 Logo
+            const logoW = 380; // 和微信大致保持一定视觉比例
+            let logoH = 100; // 缺省高度
+            if (logoImage.complete && logoImage.naturalWidth > 0) {
+                logoH = (logoImage.naturalHeight / logoImage.naturalWidth) * logoW;
+                const logoX = (canvas.width - logoW) / 2;
+                ctx.drawImage(logoImage, logoX, currentY, logoW, logoH);
+            }
+            currentY += logoH + gapLogoText;
+
+            // 2. 绘制第一行自定义文字 (常规体居中)
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = `normal ${topFontSize}px 'AliPuHui', sans-serif`;
+            
+            for (let i = 0; i < topLines.length; i++) {
+                ctx.fillText(topLines[i], canvas.width / 2, currentY + i * topFontLineHeight);
+            }
+            currentY += topTextH + gapTextImg;
+
+            // 3. 绘制专属气泡图片及阴影
+            let imgToDraw = null;
+            if (creditsContentImage && creditsContentImage.complete) {
+                imgToDraw = creditsContentImage;
+            } else if (searchImage && searchImage.complete && searchImage.naturalWidth > 0) {
+                imgToDraw = searchImage;
+            }
+
+            let drawImgW = 430; // 限制最大宽高度
+            let drawImgH = 240;
+            
+            if (imgToDraw) {
+                const scale = Math.min(430 / imgToDraw.naturalWidth, 240 / imgToDraw.naturalHeight);
+                drawImgW = imgToDraw.naturalWidth * scale;
+                drawImgH = imgToDraw.naturalHeight * scale;
+                
+                const imgX = (canvas.width - drawImgW) / 2;
+                
+                // 开启45度右下角阴影
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowOffsetX = 12;
+                ctx.shadowOffsetY = 12;
+                ctx.shadowBlur = 20;
+                
+                ctx.drawImage(imgToDraw, imgX, currentY, drawImgW, drawImgH);
+                
+                // 恢复阴影状态防止影响之后绘制的文本
+                ctx.shadowColor = 'transparent';
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.shadowBlur = 0;
+            } else {
+                const imgX = (canvas.width - drawImgW) / 2;
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(imgX, currentY, drawImgW, drawImgH);
+                ctx.fillStyle = '#999';
+                ctx.font = `normal 24px 'AliPuHui', sans-serif`;
+                ctx.fillText('缺少气泡截图', canvas.width / 2, currentY + drawImgH / 2 - 12);
+            }
+            currentY += drawImgH + gapImgText;
+
+            // 4. 绘制第二行自定义文字 (常规体居中)
+            ctx.fillStyle = '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = `normal ${bottomFontSize}px 'AliPuHui', sans-serif`;
+            
+            for (let i = 0; i < bottomLines.length; i++) {
+                ctx.fillText(bottomLines[i], canvas.width / 2, currentY + i * bottomFontLineHeight);
+            }
+        }
+
+
+        // ============================================
+        // Helper: 文字框排版方法供微信和B站调用
+        // ============================================
         function drawWechatTextBoxes() {
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
-            
             if (!topText && !bottomText) return;
             
-            // 计算缩放
             const topStats = countCharacters(topText);
             const bottomStats = countCharacters(bottomText);
             const maxWidth = Math.max(topStats.effectiveWidth, bottomStats.effectiveWidth);
             let scale = 1;
-            
             if (maxWidth > 18) {
                 scale = Math.max(0.5, 18 / maxWidth);
             }
             
-            // 基本设置
             const baseFontSize = 85 * scale;
             const maxTextWidth = canvas.width * 0.8;
             
-            // 计算图片区域底部位置
             let logoBottomY = canvas.height * 0.2;
             if (logoImage.complete && logoImage.naturalWidth > 0) {
                 const logoWidth = canvas.width * 0.4;
@@ -1095,14 +1333,13 @@
             const imageAreaHeight = canvas.width * 9 / 16;
             const textStartY = logoBottomY + imageAreaHeight + 60;
             
-            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            ctx.font = `bold ${baseFontSize}px 'AliPuHui', sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             
             const borderWidth = 10;
             const padding = 15;
             
-            // 计算两个文字框的尺寸
             let topTextWidth = 0, topTextHeight = 0;
             let bottomTextWidth = 0, bottomTextHeight = 0;
             
@@ -1110,89 +1347,61 @@
                 topTextWidth = Math.min(ctx.measureText(topText).width, maxTextWidth);
                 topTextHeight = baseFontSize * 1.2;
             }
-            
             if (bottomText) {
                 bottomTextWidth = Math.min(ctx.measureText(bottomText).width, maxTextWidth);
                 bottomTextHeight = baseFontSize * 1.2;
             }
             
-            // 计算总高度和起始位置，让两个框挨在一起
-            const totalHeight = (topText ? topTextHeight + padding * 2 : 0) + 
-                               (bottomText ? bottomTextHeight + padding * 2 : 0);
             let currentY = textStartY;
             
-            // 绘制上方文字 - 底色#FFA349，文字#000，左和上border 10px #FFF
             if (topText) {
                 const topX = (canvas.width - topTextWidth) / 2;
-                
                 const boxX = topX - padding;
                 const boxY = currentY - padding;
                 const boxWidth = topTextWidth + padding * 2;
                 const boxHeight = topTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制左边框
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(boxX, boxY, borderWidth, boxHeight);
-                
-                // 绘制上边框
                 ctx.fillRect(boxX, boxY, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#000000';
                 ctx.fillText(topText, topX, boxY + boxHeight / 2);
                 
-                currentY += topTextHeight + padding * 2; // 紧挨着，不加间距
+                currentY += topTextHeight + padding * 2; 
             }
             
-            // 绘制下方文字 - 底色#000，文字#FFF，右和下border 10px #FFA349
             if (bottomText) {
                 const bottomX = (canvas.width - bottomTextWidth) / 2;
-                
                 const boxX = bottomX - padding;
                 const boxY = currentY - padding;
                 const boxWidth = bottomTextWidth + padding * 2;
                 const boxHeight = bottomTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制右边框
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX + boxWidth - borderWidth, boxY, borderWidth, boxHeight);
-                
-                // 绘制下边框
                 ctx.fillRect(boxX, boxY + boxHeight - borderWidth, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillText(bottomText, bottomX, boxY + boxHeight / 2);
             }
         }
 
-        // 绘制B站文字框（左右布局改为上下组合）
         function drawBilibiliTextBoxes() {
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
-            
             if (!topText && !bottomText) return;
             
-            const maxTextWidth = canvas.width * 0.85; // 左右留边距，最大宽度 85%
-            const maxHeight = canvas.height / 3;      // 高度不超过 1/3
+            const maxTextWidth = canvas.width * 0.85; 
+            const maxHeight = canvas.height / 3;      
             const padding = 25;
             const borderWidth = 12;
             
-            // 初始基础字号
             let fontSize = 110;
+            ctx.font = `bold ${fontSize}px 'AliPuHui', sans-serif`;
             
-            ctx.font = `bold ${fontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
-            
-            // 计算需要多大的字号
-            // 先检查宽度
             let topTextWidth = topText ? ctx.measureText(topText).width : 0;
             let bottomTextWidth = bottomText ? ctx.measureText(bottomText).width : 0;
             let currentMaxWidth = Math.max(topTextWidth, bottomTextWidth);
@@ -1201,18 +1410,15 @@
                 fontSize = fontSize * (maxTextWidth - padding * 2) / currentMaxWidth;
             }
             
-            // 检查高度
             let linesCount = (topText ? 1 : 0) + (bottomText ? 1 : 0);
             if (linesCount > 0) {
                 let expectedTotalHeight = linesCount * (fontSize * 1.2 + padding * 2);
                 if (expectedTotalHeight > maxHeight) {
-                    // 如果高度超出，重新计算 fontSize
                     fontSize = (maxHeight / linesCount - padding * 2) / 1.2;
                 }
             }
             
-            // 应用最终的字体大小
-            ctx.font = `bold ${fontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            ctx.font = `bold ${fontSize}px 'AliPuHui', sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             
@@ -1222,92 +1428,77 @@
             topTextWidth = topText ? ctx.measureText(topText).width : 0;
             bottomTextWidth = bottomText ? ctx.measureText(bottomText).width : 0;
             
-            // 计算总高度和起始Y坐标（放在底部偏上位置留边距）
             const totalHeight = (topText ? topTextHeight + padding * 2 : 0) + 
                                (bottomText ? bottomTextHeight + padding * 2 : 0);
                                
-            const marginBottom = 100; // 底部留边距
+            const marginBottom = 100; 
             let currentY = canvas.height - marginBottom - totalHeight;
             
-            // 绘制上方文字 - 底色#FFA349，文字#000，左和上border #FFF
             if (topText) {
                 const topX = (canvas.width - topTextWidth) / 2;
-                
                 const boxX = topX - padding;
                 const boxY = currentY;
                 const boxWidth = topTextWidth + padding * 2;
                 const boxHeight = topTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制左边框
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(boxX, boxY, borderWidth, boxHeight);
-                
-                // 绘制上边框
                 ctx.fillRect(boxX, boxY, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#000000';
                 ctx.fillText(topText, topX, boxY + boxHeight / 2);
-                
-                currentY += boxHeight; // 紧挨着，不加间距
+                currentY += boxHeight; 
             }
             
-            // 绘制下方文字 - 底色#000，文字#FFF，右和下border #FFA349
             if (bottomText) {
                 const bottomX = (canvas.width - bottomTextWidth) / 2;
-                
                 const boxX = bottomX - padding;
                 const boxY = currentY;
                 const boxWidth = bottomTextWidth + padding * 2;
                 const boxHeight = bottomTextHeight + padding * 2;
                 
-                // 绘制文字背景
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-                
-                // 绘制右边框
                 ctx.fillStyle = '#FFA349';
                 ctx.fillRect(boxX + boxWidth - borderWidth, boxY, borderWidth, boxHeight);
-                
-                // 绘制下边框
                 ctx.fillRect(boxX, boxY + boxHeight - borderWidth, boxWidth, borderWidth);
-                
-                // 绘制文字
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillText(bottomText, bottomX, boxY + boxHeight / 2);
             }
         }
 
-        // 下载图片
+        // ============================================
+        // 核心功能：下载和重置
+        // ============================================
         function downloadImage() {
             const link = document.createElement('a');
             let fileName = '';
             
-            if (currentCoverType === 'wechat') {
-                fileName = '微信视频号封面';
-            } else if (currentCoverType === 'bilibili') {
-                fileName = 'B站视频封面';
-            } else {
-                fileName = '竖屏短标题-透明底';
-            }
+            if (currentCoverType === 'wechat') fileName = '微信视频号封面';
+            else if (currentCoverType === 'bilibili') fileName = 'B站视频封面';
+            else if (currentCoverType === 'credits') fileName = 'Credits竖屏';
+            else fileName = '竖屏短标题-透明底';
             
             link.download = `${fileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
 
-        // 重置所有
         function resetAll() {
+            // 重置标准单行文本
             document.getElementById('topText').value = '';
             document.getElementById('bottomText').value = '';
-            document.getElementById('imageFile').value = '';
-            contentImage = null;
             
-            // 重置上传区域
+            // 重置Credits特有多行文本
+            document.getElementById('creditsTopText').value = "搜索标题看全文\n秒懂更多深度信息";
+            document.getElementById('creditsBottomText').value = "记者：小娱\n制作：James\n监制：吴立湘\n\n2026.3.22";
+            
+            // 清理缓存图片数据
+            contentImage = null;
+            creditsContentImage = null;
+            
+            // 重置标准上传区域
             const uploadArea = document.getElementById('imageUploadArea');
             uploadArea.innerHTML = `
                 <div class="upload-icon">📷</div>
@@ -1315,24 +1506,42 @@
                 <div class="upload-hint">支持 JPG、PNG、GIF 格式</div>
                 <input type="file" class="file-input" id="imageFile" accept="image/*">
             `;
-            
-            // 隐藏图片信息和警告横幅
             document.getElementById('imageInfo').style.display = 'none';
+
+            // 重置Credits专属上传区域
+            const creditsUploadArea = document.getElementById('creditsImageUploadArea');
+            creditsUploadArea.innerHTML = `
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">点击或拖拽气泡截图到此处</div>
+                <div class="upload-hint">支持 JPG、PNG 格式</div>
+                <input type="file" class="file-input" id="creditsImageFile" accept="image/*">
+            `;
+            document.getElementById('creditsImageInfo').style.display = 'none';
+            
             document.getElementById('warningBanner').style.display = 'none';
             
-            // 重新绑定事件
+            // 重新绑定两个上传区的事件
             setupImageUpload();
             
             updateText();
             drawCanvas();
         }
 
-        // 初始化
-        loadBaseImages();
-        setupImageUpload();
-        updateText();
-        updateTipText();
+        // ============================================
+        // 初始化运行流程
+        // ============================================
+        loadState();           // 1. 优先恢复上次用户存储的数据及 UI 设置
+        loadBaseImages();      // 2. 加载缺省/内置图片 (自带重绘)
+        setupImageUpload();    // 3. 绑定拖拽和点击上传事件
+        changeCoverType();     // 4. 将 UI 切到设定的状态 (自带重绘)
         updateTextLabels();
+
+        // 5. 监听字体加载完成后强制再次重绘，防止首次渲染Fallback成微软雅黑
+        if (document.fonts) {
+            document.fonts.ready.then(function() {
+                drawCanvas();
+            });
+        }
     </script>
 </body>
 </html>
