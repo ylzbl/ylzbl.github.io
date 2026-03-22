@@ -84,6 +84,7 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
         canvas {
@@ -91,6 +92,18 @@
             border-radius: 4px;
             max-width: 100%;
             height: auto;
+            background: transparent; /* 确保画布背景透明 */
+        }
+
+        /* 透明模式下的网格背景 */
+        .canvas-container.transparent-mode {
+            background-image: 
+                linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
 
         .control-group {
@@ -386,6 +399,10 @@
                         <input type="radio" id="bilibili" name="coverType" value="bilibili" onchange="changeCoverType()">
                         <label for="bilibili">B站视频封面 (1920x1080)</label>
                     </div>
+                    <div class="radio-option">
+                        <input type="radio" id="vertical" name="coverType" value="vertical" onchange="changeCoverType()">
+                        <label for="vertical">竖屏短标题 (透明底PNG)</label>
+                    </div>
                 </div>
             </div>
 
@@ -397,7 +414,7 @@
                 <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
             </div>
 
-            <div class="control-group">
+            <div class="control-group" id="imageUploadGroup">
                 <label>图片上传：</label>
                 <div class="image-upload-area" id="imageUploadArea">
                     <div class="upload-icon">📷</div>
@@ -454,15 +471,23 @@
                 width: 1080,
                 height: 1448,
                 showLogo: true,
-                textLayout: 'vertical', // 上下两行
-                aspectRatio: 16/9
+                showBackground: true,
+                textLayout: 'vertical'
             },
             bilibili: {
                 width: 1920,
                 height: 1080,
                 showLogo: false,
-                textLayout: 'horizontal', // 左右一行
-                aspectRatio: 16/9
+                showBackground: true,
+                textLayout: 'vertical'
+            },
+            vertical: {
+                width: 1080,
+                height: 0, // 动态计算
+                showLogo: false,
+                showBackground: false,
+                transparentBackground: true,
+                textLayout: 'vertical'
             }
         };
 
@@ -474,13 +499,23 @@
             
             // 更新画布尺寸
             canvas.width = config.width;
-            canvas.height = config.height;
+            if (config.height > 0) {
+                canvas.height = config.height;
+            }
             
             // 更新提示文字
             updateTipText();
             
             // 更新文字标签
             updateTextLabels();
+            
+            // 控制图片上传区域显示
+            const imageUploadGroup = document.getElementById('imageUploadGroup');
+            if (currentCoverType === 'vertical') {
+                imageUploadGroup.style.display = 'none';
+            } else {
+                imageUploadGroup.style.display = 'block';
+            }
             
             // 重新绘制
             drawCanvas();
@@ -496,13 +531,22 @@
                     <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
                     <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
                 `;
-            } else {
+            } else if (currentCoverType === 'bilibili') {
                 tipElement.innerHTML = `
                     B站封面尺寸1920x1080，不显示logo。<br>
-                    文字布局为左右一行，图片保持16:9比例居中显示。<br>
-                    每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。<br>
+                    文字布局为上下两行组合，位于底部，总高度不超过封面1/3。<br>
+                    每行文字限制：超宽或超高时会自动缩放。<br>
                     <small>如遇跨域问题，应用会自动尝试网络备用图片。</small><br>
                     <small>支持本地字体：将阿里巴巴普惠体字体文件放在同一目录下可优先使用本地字体。</small>
+                `;
+            } else { // vertical
+                tipElement.innerHTML = `
+                    竖屏短标题：透明背景PNG，仅包含两行文字。<br>
+                    上方文字：黄底黑字，白边框<br>
+                    下方文字：黑底白字，黄边框<br>
+                    用于叠加到视频内部遮罩层。<br>
+                    <small>画布高度会根据文字内容自动调整。</small><br>
+                    <small>每行文字限制：中文9字/英文18字符（无缩放），最多13字/26字符（会缩放）。</small>
                 `;
             }
         }
@@ -511,13 +555,8 @@
             const topLabel = document.getElementById('topTextLabel');
             const bottomLabel = document.getElementById('bottomTextLabel');
             
-            if (currentCoverType === 'wechat') {
-                topLabel.textContent = '上方文字（黄底黑字）：';
-                bottomLabel.textContent = '下方文字（黑底白字）：';
-            } else {
-                topLabel.textContent = '左侧文字（黄底黑字）：';
-                bottomLabel.textContent = '右侧文字（黑底白字）：';
-            }
+            topLabel.textContent = '上方文字（黄底黑字）：';
+            bottomLabel.textContent = '下方文字（黑底白字）：';
         }
         
         // 预加载背景和logo
@@ -717,12 +756,31 @@
         // 绘制画布
         function drawCanvas() {
             const config = coverConfigs[currentCoverType];
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const canvasContainer = document.querySelector('.canvas-container');
             
-            if (currentCoverType === 'wechat') {
-                drawWechatCover();
+            if (currentCoverType === 'vertical') {
+                // 透明背景，只绘制文字
+                canvas.width = config.width;
+                
+                // 设置画布为透明
+                canvas.style.background = 'transparent';
+                canvasContainer.classList.add('transparent-mode');
+                
+                // 绘制竖屏短标题
+                drawVerticalShortTitle();
             } else {
-                drawBilibiliCover();
+                // 其他类型有背景
+                canvas.style.background = 'white';
+                canvasContainer.classList.remove('transparent-mode');
+                canvas.width = config.width;
+                canvas.height = config.height;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                if (currentCoverType === 'wechat') {
+                    drawWechatCover();
+                } else {
+                    drawBilibiliCover();
+                }
             }
         }
 
@@ -754,10 +812,10 @@
             if (logoImage.complete && logoImage.naturalWidth > 0) {
                 const logoWidth = canvas.width * 0.4;
                 const logoHeight = (logoImage.naturalHeight / logoImage.naturalWidth) * logoWidth;
-                logoBottomY = canvas.height * 0.12 + logoHeight + 40;
+                logoBottomY = canvas.height * 0.12 + logoHeight + 40; // 修复：恢复40px间距
             }
-            
-            // 绘制中间图片区域 - 修复细长图片显示问题
+
+            // 绘制中间图片区域
             const imageAreaX = 0;
             const imageAreaY = logoBottomY;
             const imageAreaWidth = canvas.width;
@@ -810,7 +868,7 @@
                     imageAreaX + imageAreaWidth / 2, 
                     imageAreaY + imageAreaHeight / 2);
             }
-            
+
             // 绘制文字区域
             drawWechatTextBoxes();
         }
@@ -887,6 +945,123 @@
             
             // 绘制文字区域
             drawBilibiliTextBoxes();
+        }
+
+        // 绘制竖屏短标题（透明底）
+        function drawVerticalShortTitle() {
+            const topText = document.getElementById('topText').value;
+            const bottomText = document.getElementById('bottomText').value;
+            
+            if (!topText && !bottomText) {
+                // 如果没有文字，设置一个最小高度
+                canvas.height = 200;
+                return;
+            }
+            
+            // 计算缩放
+            const topStats = countCharacters(topText);
+            const bottomStats = countCharacters(bottomText);
+            const maxWidth = Math.max(topStats.effectiveWidth, bottomStats.effectiveWidth);
+            let scale = 1;
+            
+            if (maxWidth > 18) {
+                scale = Math.max(0.5, 18 / maxWidth);
+            }
+            
+            // 基本设置
+            const baseFontSize = 85 * scale;
+            const maxTextWidth = canvas.width * 0.8;
+            
+            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            const borderWidth = 10;
+            const padding = 15;
+            
+            // 计算两个文字框的尺寸
+            let topTextWidth = 0, topTextHeight = 0;
+            let bottomTextWidth = 0, bottomTextHeight = 0;
+            
+            if (topText) {
+                topTextWidth = Math.min(ctx.measureText(topText).width, maxTextWidth);
+                topTextHeight = baseFontSize * 1.2;
+            }
+            
+            if (bottomText) {
+                bottomTextWidth = Math.min(ctx.measureText(bottomText).width, maxTextWidth);
+                bottomTextHeight = baseFontSize * 1.2;
+            }
+            
+            // 计算总高度
+            const totalHeight = (topText ? topTextHeight + padding * 2 : 0) + 
+                               (bottomText ? bottomTextHeight + padding * 2 : 0);
+            
+            // 设置画布高度（添加上下边距）
+            const margin = 40;
+            canvas.height = totalHeight + margin * 2;
+            
+            // 清除画布（透明）
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 重新设置字体（因为clearRect会重置部分状态）
+            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            let currentY = margin;
+            
+            // 绘制上方文字 - 底色#FFA349，文字#000，左和上border 10px #FFF
+            if (topText) {
+                const topX = (canvas.width - topTextWidth) / 2;
+                
+                const boxX = topX - padding;
+                const boxY = currentY;
+                const boxWidth = topTextWidth + padding * 2;
+                const boxHeight = topTextHeight + padding * 2;
+                
+                // 绘制文字背景
+                ctx.fillStyle = '#FFA349';
+                ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                
+                // 绘制左边框
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(boxX, boxY, borderWidth, boxHeight);
+                
+                // 绘制上边框
+                ctx.fillRect(boxX, boxY, boxWidth, borderWidth);
+                
+                // 绘制文字
+                ctx.fillStyle = '#000000';
+                ctx.fillText(topText, topX, boxY + boxHeight / 2);
+                
+                currentY += boxHeight;
+            }
+            
+            // 绘制下方文字 - 底色#000，文字#FFF，右和下border 10px #FFA349
+            if (bottomText) {
+                const bottomX = (canvas.width - bottomTextWidth) / 2;
+                
+                const boxX = bottomX - padding;
+                const boxY = currentY;
+                const boxWidth = bottomTextWidth + padding * 2;
+                const boxHeight = bottomTextHeight + padding * 2;
+                
+                // 绘制文字背景
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+                
+                // 绘制右边框
+                ctx.fillStyle = '#FFA349';
+                ctx.fillRect(boxX + boxWidth - borderWidth, boxY, borderWidth, boxHeight);
+                
+                // 绘制下边框
+                ctx.fillRect(boxX, boxY + boxHeight - borderWidth, boxWidth, borderWidth);
+                
+                // 绘制文字
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillText(bottomText, bottomX, boxY + boxHeight / 2);
+            }
         }
 
         // 绘制微信视频号文字框（上下布局，挨在一起）
@@ -999,59 +1174,69 @@
             }
         }
 
-        // 绘制B站文字框（左右布局）
+        // 绘制B站文字框（左右布局改为上下组合）
         function drawBilibiliTextBoxes() {
             const topText = document.getElementById('topText').value;
             const bottomText = document.getElementById('bottomText').value;
             
             if (!topText && !bottomText) return;
             
-            // 计算缩放
-            const topStats = countCharacters(topText);
-            const bottomStats = countCharacters(bottomText);
-            const maxWidth = Math.max(topStats.effectiveWidth, bottomStats.effectiveWidth);
-            let scale = 1;
+            const maxTextWidth = canvas.width * 0.85; // 左右留边距，最大宽度 85%
+            const maxHeight = canvas.height / 3;      // 高度不超过 1/3
+            const padding = 25;
+            const borderWidth = 12;
             
-            if (maxWidth > 18) {
-                scale = Math.max(0.5, 18 / maxWidth);
+            // 初始基础字号
+            let fontSize = 110;
+            
+            ctx.font = `bold ${fontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            
+            // 计算需要多大的字号
+            // 先检查宽度
+            let topTextWidth = topText ? ctx.measureText(topText).width : 0;
+            let bottomTextWidth = bottomText ? ctx.measureText(bottomText).width : 0;
+            let currentMaxWidth = Math.max(topTextWidth, bottomTextWidth);
+            
+            if (currentMaxWidth + padding * 2 > maxTextWidth) {
+                fontSize = fontSize * (maxTextWidth - padding * 2) / currentMaxWidth;
             }
             
-            // 基本设置
-            const baseFontSize = 120 * scale;
-            const textY = canvas.height * 0.85;
+            // 检查高度
+            let linesCount = (topText ? 1 : 0) + (bottomText ? 1 : 0);
+            if (linesCount > 0) {
+                let expectedTotalHeight = linesCount * (fontSize * 1.2 + padding * 2);
+                if (expectedTotalHeight > maxHeight) {
+                    // 如果高度超出，重新计算 fontSize
+                    fontSize = (maxHeight / linesCount - padding * 2) / 1.2;
+                }
+            }
             
-            ctx.font = `bold ${baseFontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
+            // 应用最终的字体大小
+            ctx.font = `bold ${fontSize}px 'AliPuHui', 'Microsoft YaHei', sans-serif`;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             
-            const borderWidth = 15;
-            const padding = 20;
-            const gap = 40; // 两个文字框之间的间距
+            let topTextHeight = fontSize * 1.2;
+            let bottomTextHeight = fontSize * 1.2;
             
-            // 计算两个文字框的尺寸
-            let topTextWidth = 0, bottomTextWidth = 0;
-            const textHeight = baseFontSize * 1.2;
+            topTextWidth = topText ? ctx.measureText(topText).width : 0;
+            bottomTextWidth = bottomText ? ctx.measureText(bottomText).width : 0;
             
+            // 计算总高度和起始Y坐标（放在底部偏上位置留边距）
+            const totalHeight = (topText ? topTextHeight + padding * 2 : 0) + 
+                               (bottomText ? bottomTextHeight + padding * 2 : 0);
+                               
+            const marginBottom = 100; // 底部留边距
+            let currentY = canvas.height - marginBottom - totalHeight;
+            
+            // 绘制上方文字 - 底色#FFA349，文字#000，左和上border #FFF
             if (topText) {
-                topTextWidth = ctx.measureText(topText).width;
-            }
-            
-            if (bottomText) {
-                bottomTextWidth = ctx.measureText(bottomText).width;
-            }
-            
-            // 计算总宽度和起始位置
-            const totalWidth = (topText ? topTextWidth + padding * 2 : 0) + 
-                              (bottomText ? bottomTextWidth + padding * 2 : 0) + 
-                              (topText && bottomText ? gap : 0);
-            let currentX = (canvas.width - totalWidth) / 2;
-            
-            // 绘制左侧文字 - 底色#FFA349，文字#000，左和上border 15px #FFF
-            if (topText) {
-                const boxX = currentX;
-                const boxY = textY - textHeight / 2 - padding;
+                const topX = (canvas.width - topTextWidth) / 2;
+                
+                const boxX = topX - padding;
+                const boxY = currentY;
                 const boxWidth = topTextWidth + padding * 2;
-                const boxHeight = textHeight + padding * 2;
+                const boxHeight = topTextHeight + padding * 2;
                 
                 // 绘制文字背景
                 ctx.fillStyle = '#FFA349';
@@ -1066,17 +1251,19 @@
                 
                 // 绘制文字
                 ctx.fillStyle = '#000000';
-                ctx.fillText(topText, boxX + padding, textY);
+                ctx.fillText(topText, topX, boxY + boxHeight / 2);
                 
-                currentX += boxWidth + gap;
+                currentY += boxHeight; // 紧挨着，不加间距
             }
             
-            // 绘制右侧文字 - 底色#000，文字#FFF，右和下border 15px #FFA349
+            // 绘制下方文字 - 底色#000，文字#FFF，右和下border #FFA349
             if (bottomText) {
-                const boxX = currentX;
-                const boxY = textY - textHeight / 2 - padding;
+                const bottomX = (canvas.width - bottomTextWidth) / 2;
+                
+                const boxX = bottomX - padding;
+                const boxY = currentY;
                 const boxWidth = bottomTextWidth + padding * 2;
-                const boxHeight = textHeight + padding * 2;
+                const boxHeight = bottomTextHeight + padding * 2;
                 
                 // 绘制文字背景
                 ctx.fillStyle = '#000000';
@@ -1091,15 +1278,24 @@
                 
                 // 绘制文字
                 ctx.fillStyle = '#FFFFFF';
-                ctx.fillText(bottomText, boxX + padding, textY);
+                ctx.fillText(bottomText, bottomX, boxY + boxHeight / 2);
             }
         }
 
         // 下载图片
         function downloadImage() {
             const link = document.createElement('a');
-            const coverType = currentCoverType === 'wechat' ? '微信视频号封面' : 'B站视频封面';
-            link.download = `${coverType}.png`;
+            let fileName = '';
+            
+            if (currentCoverType === 'wechat') {
+                fileName = '微信视频号封面';
+            } else if (currentCoverType === 'bilibili') {
+                fileName = 'B站视频封面';
+            } else {
+                fileName = '竖屏短标题-透明底';
+            }
+            
+            link.download = `${fileName}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
