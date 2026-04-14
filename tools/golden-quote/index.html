@@ -169,6 +169,7 @@
         .quote-box { position: absolute; top: 950px; left: 50%; transform: translateX(-50%) translateZ(0); width: 920px; background-color: var(--color-quote-bg); border-radius: 60px; padding: 60px 50px; z-index: 10; }
         .quote-text { font-size: 50px; color: var(--color-text-main); line-height: 1.6; text-align: left; display: block; max-height: 400px; overflow: hidden; position: relative; z-index: 1; }
         .quote-text .highlight { color: var(--color-primary); }
+        .quote-text-rendered { display: block; width: 100%; }
 
         .bottom-left { position: absolute; bottom: 100px; left: 80px; height: 280px; display: flex; align-items: flex-end; }
         .event-logo-img { max-height: 238px; max-width: 1000px; object-fit: contain; display: none; }
@@ -699,12 +700,107 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     window.addEventListener('resize', scalePoster);
 
+    // ================= 金句文本 Canvas 预渲染 (修复html2canvas中文重叠/折行bug) =================
+    /**
+     * 将金句文本用 Canvas 2D API 精确渲染为图片，避免 html2canvas 处理中文+高亮span时的布局偏差。
+     * 核心逻辑：逐字测量宽度，按行宽自动换行，高亮词用主色调绘制。
+     */
+    function renderQuoteToCanvas() {
+        const canvasW = 820; // quote-box内可用宽度: 920 - padding(50*2) = 820
+        const fontSize = 50;
+        const lineHeight = fontSize * 1.6; // 80px, 与CSS line-height:1.6一致
+        const maxLines = 5; // 最多5行, 5*80=400 <= max-height:400px
+        const fontFamily = '"Alibaba PuHuiTi", "PingFang SC", "Microsoft YaHei", sans-serif';
+
+        const canvas = document.createElement('canvas');
+        canvas.width = canvasW;
+        canvas.height = lineHeight * maxLines;
+        const ctx = canvas.getContext('2d');
+
+        // 构建字符数组：每个元素 { char, isHighlight }
+        const text = state.quote;
+        const charArr = [];
+        // 标记高亮区间
+        const highlightRanges = [];
+        state.highlights.forEach(word => {
+            if (!word) return;
+            let startIdx = 0;
+            while (true) {
+                const idx = text.indexOf(word, startIdx);
+                if (idx === -1) break;
+                highlightRanges.push({ start: idx, end: idx + word.length });
+                startIdx = idx + 1;
+            }
+        });
+        // 合并重叠区间
+        highlightRanges.sort((a, b) => a.start - b.start || a.end - b.end);
+        const merged = [];
+        highlightRanges.forEach(r => {
+            if (merged.length > 0 && r.start <= merged[merged.length - 1].end) {
+                merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, r.end);
+            } else {
+                merged.push({ start: r.start, end: r.end });
+            }
+        });
+        for (let i = 0; i < text.length; i++) {
+            const isHL = merged.some(r => i >= r.start && i < r.end);
+            charArr.push({ char: text[i], isHighlight: isHL });
+        }
+
+        // 逐行逐字渲染
+        ctx.textBaseline = 'top';
+        ctx.font = `${fontSize}px ${fontFamily}`;
+
+        let curX = 0;
+        let curY = 0;
+        let lineChars = 0;
+
+        for (let i = 0; i < charArr.length; i++) {
+            const ch = charArr[i];
+            const charW = ctx.measureText(ch.char).width;
+
+            // 换行判断：当前行放不下这个字了
+            if (curX + charW > canvasW && lineChars > 0) {
+                curX = 0;
+                curY += lineHeight;
+                lineChars = 0;
+                if (curY >= canvas.height) break; // 超出最大行数
+            }
+
+            ctx.fillStyle = ch.isHighlight ? state.theme.primary : state.theme.textMain;
+            ctx.fillText(ch.char, curX, curY);
+            curX += charW;
+            lineChars++;
+        }
+
+        // 裁剪到实际内容高度
+        const actualHeight = Math.min(curY + lineHeight, canvas.height);
+        const trimmedCanvas = document.createElement('canvas');
+        trimmedCanvas.width = canvasW;
+        trimmedCanvas.height = actualHeight;
+        const trimmedCtx = trimmedCanvas.getContext('2d');
+        trimmedCtx.drawImage(canvas, 0, 0, canvasW, actualHeight, 0, 0, canvasW, actualHeight);
+
+        return trimmedCanvas.toDataURL('image/png');
+    }
+
     document.getElementById('btnExport').addEventListener('click', () => {
         const loading = document.getElementById('loading');
         const target = document.getElementById('captureTarget');
         loading.style.display = 'flex';
         posterWrapper.style.transform = 'none'; // 重置缩放避免网格bug
-        
+
+        // ---- 修复：预渲染金句文本为图片，替换DOM中的文本节点 ----
+        const quoteEl = document.getElementById('renderQuote');
+        const originalHTML = quoteEl.innerHTML; // 备份原始HTML
+        const originalStyle = quoteEl.getAttribute('style') || '';
+
+        // 用Canvas预渲染金句
+        const quoteImgDataURL = renderQuoteToCanvas();
+        quoteEl.innerHTML = `<img class="quote-text-rendered" src="${quoteImgDataURL}" />`;
+        quoteEl.style.overflow = 'visible';
+        quoteEl.style.maxHeight = 'none';
+
         setTimeout(() => {
             html2canvas(target, { scale: 1, width: 1080, height: 1920, useCORS: true, backgroundColor: null, logging: false })
             .then(canvas => {
@@ -713,10 +809,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
             }).catch(e => alert("导出失败:" + e)).finally(() => {
+                // ---- 恢复DOM原始状态 ----
+                quoteEl.innerHTML = originalHTML;
+                quoteEl.setAttribute('style', originalStyle);
                 scalePoster();
                 loading.style.display = 'none';
             });
-        }, 150);
+        }, 200);
     });
 
     // ================= 初始化 =================
