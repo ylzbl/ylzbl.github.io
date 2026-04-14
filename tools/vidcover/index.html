@@ -10,9 +10,9 @@
         @font-face { font-family: 'AliPuHui'; src: url('./AliPuHui-Bold.woff2') format('woff2'), url('./AliPuHui-Bold.woff') format('woff'), url('./AliPuHui-Bold.ttf') format('truetype'), url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2'); font-weight: bold; font-display: swap; }
         @font-face { font-family: 'AliPuHui'; src: url('./AliPuHui-Light.woff2') format('woff2'), url('./AliPuHui-Light.woff') format('woff'), url('./AliPuHui-Light.ttf') format('truetype'), url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2'); font-weight: 300; font-display: swap; }
         @font-face { font-family: 'AliPuHui'; src: url('./AliPuHui-Medium.woff2') format('woff2'), url('./AliPuHui-Medium.woff') format('woff'), url('./AliPuHui-Medium.ttf') format('truetype'), url('https://cdn.jsdelivr.net/gh/IlysvlVEizbr/via-font@0.3/AliPuHui.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+        @font-face { font-family: 'AliPuHui'; src: url('./AliPuHui-Heavy.woff2') format('woff2'), url('./AliPuHui-Heavy.woff') format('woff'), url('./AliPuHui-Heavy.ttf') format('truetype'); font-weight: 900; font-display: swap; }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        /* 统一页面字体定义 */
         body, input, textarea, button, label { font-family: 'AliPuHui', sans-serif; }
         body { background: #f5f5f5; padding: 10px; }
 
@@ -22,7 +22,6 @@
         .canvas-container { background: white; padding: 20px; border-radius: 8px; transition: all 0.3s ease; }
         canvas { border: 1px solid #ddd; border-radius: 4px; max-width: 100%; height: auto; background: transparent; }
 
-        /* 透明模式下的网格背景 */
         .canvas-container.transparent-mode {
             background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%);
             background-size: 20px 20px;
@@ -34,7 +33,6 @@
         .control-group input[type="text"], .control-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
         .control-group textarea { resize: vertical; }
 
-        /* 统一按钮样式 */
         .btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px; margin-bottom: 10px; transition: background 0.2s; }
         .btn:hover { background: #0056b3; }
         .btn-secondary { background: #6c757d; }
@@ -43,12 +41,9 @@
 
         .scale-info { font-size: 12px; color: #666; margin-top: 10px; padding: 8px; background: #f8f9fa; border-radius: 4px; }
         .main-title { text-align: center; color: #333; margin-bottom: 20px; font-size: 24px; }
-        
-        /* 统一提示框样式 */
         .tip { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 10px; margin-bottom: 20px; font-size: 12px; line-height: 1.5; color: #333; }
         .warning-banner { background: #ffeb3b; color: #000; padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; font-size: 13px; font-weight: bold; display: none; text-align: center; }
 
-        /* 单选按钮统一样式 */
         .cover-type-selector { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
         .cover-type-selector label.title { font-weight: bold; color: #495057; display: block; margin-bottom: 10px; }
         .radio-group { display: flex; flex-wrap: wrap; gap: 15px; }
@@ -56,7 +51,6 @@
         .radio-option:hover { background-color: #e9ecef; }
         .radio-option input[type="radio"], .radio-option label { margin: 0; cursor: pointer; font-weight: normal; color: #495057; }
 
-        /* 上传区域统一样式 */
         .image-upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; background: #fafafa; transition: all 0.3s ease; cursor: pointer; position: relative; }
         .image-upload-area:hover, .image-upload-area.dragover { border-color: #007bff; background: #e3f2fd; }
         .image-upload-area.dragover { transform: scale(1.02); }
@@ -68,15 +62,29 @@
 
         @media (max-width: 768px) {
             .container { flex-direction: column; }
-            .preview { order: -1; width: 100%; } /* 移动端预览优先 */
+            .preview { order: -1; width: 100%; }
         }
+
+        /* 裁剪弹窗 */
+        .crop-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; flex-direction:column; align-items:center; justify-content:center; user-select:none; }
+        .crop-overlay.active { display:flex; }
+        .crop-bar { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; justify-content:center; align-items:center; }
+        .crop-bar button { padding:7px 14px; border:1px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.1); color:#fff; border-radius:4px; cursor:pointer; font-size:13px; font-family:inherit; transition:background .15s; }
+        .crop-bar button:hover { background:rgba(255,255,255,0.2); }
+        .crop-bar button.on { background:#FC8166; border-color:#FC8166; }
+        .crop-bar .ok { background:#FC8166; border-color:#FC8166; font-weight:bold; }
+        .crop-bar .ok:hover { background:#e86e55; }
+        .crop-wrap { position:relative; overflow:hidden; line-height:0; }
+        #cropImg { display:block; pointer-events:none; }
+        .crop-box { position:absolute; border:2px solid rgba(255,255,255,0.9); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move; }
+        .crop-msg { color:rgba(255,255,255,0.7); font-size:12px; margin-top:10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="controls">
             <h1 class="main-title">视频封面生成器</h1>
-            
+
             <div class="cover-type-selector">
                 <label class="title">封面类型：</label>
                 <div class="radio-group">
@@ -88,10 +96,10 @@
             </div>
 
             <div class="tip">
-                请将bg.jpg、logo.png、search.jpg放在本页面同文件夹下。<br>
-                将阿里巴巴普惠体字体文件放在同一目录下，可优先使用本地字体。<br>
-                如遇跨域问题，会尝试网络备用资源。<br>
-                每行文字限制：9中文字/18英文字，最多13/26字符（超宽或超高时会缩放）。<br>
+                <strong>必选本地文件：</strong>logo_color.svg、logo_text.svg（矢量 Logo）、search.jpg（Credits 气泡截图）。<br>
+                <strong>可选：</strong>阿里巴巴普惠体 .woff2 字体文件。<br>
+                Logo 与水印均为 SVG 矢量渲染，无限缩放不变形。<br>
+                前三种模式标题：最多4行，8中文字内占满80%宽度。超8字缩放，单行最多10中文字/20英文字符。<br>
                 微信文章气泡截图，默认最大宽度430px，高度240px。
             </div>
 
@@ -103,6 +111,7 @@
                     <input type="file" class="file-input" id="imageFile" accept="image/*">
                 </div>
                 <div id="imageInfo" class="image-info"></div>
+                <button class="btn btn-secondary btn-sm" id="recropBtn" style="display:none" onclick="recropContent()">重新裁剪</button>
             </div>
 
             <!-- Credits专属气泡上传区 -->
@@ -116,12 +125,17 @@
                 <button class="btn btn-secondary btn-sm" onclick="resetCreditsImage()">重置气泡</button>
             </div>
 
-            <!-- 标准单行文本输入区 -->
+            <!-- 标准多行文本输入区 -->
             <div id="standardTextInputs">
-                <div class="control-group"><label>上方文字（黄底黑字）：</label><input type="text" id="topText" placeholder="请输入上方文字" maxlength="26" oninput="updateText()"></div>
-                <div class="control-group"><label>下方文字（黑底白字）：</label><input type="text" id="bottomText" placeholder="请输入下方文字" maxlength="26" oninput="updateText()"></div>
-                <div id="warningBanner" class="warning-banner">注意短标题输入字数不要过多（一般不超过10字）</div>
-                <div class="scale-info" id="scaleInfo">当前缩放: 100%</div>
+                <div class="control-group">
+                    <label>封面标题（最多4行，每行最多10中文字）：</label>
+                    <textarea id="standardText" rows="4" placeholder="请输入标题..." oninput="updateText()">这里放置十个中文字符
+20 English Character
+如果是爱奇艺那种要求
+♥也可以满足♥</textarea>
+                </div>
+                <div id="warningBanner" class="warning-banner">注意：单行超过10中文字将不再缩放，可能会超出画面！</div>
+                <div class="scale-info" id="scaleInfo">当前字号缩放: 100%</div>
             </div>
 
             <!-- Credits多行文本输入区 -->
@@ -146,60 +160,264 @@
         </div>
     </div>
 
+    <!-- 裁剪弹窗 -->
+    <div class="crop-overlay" id="cropOverlay">
+        <div class="crop-bar" id="cropBar">
+            <button class="on ratio-btn" data-r="1.7778" onclick="pickRatio(this)">16:9</button>
+            <button class="ratio-btn" data-r="1.3333" onclick="pickRatio(this)">4:3</button>
+            <button class="ratio-btn" data-r="1" onclick="pickRatio(this)">1:1</button>
+            <button class="ratio-btn" data-r="0.75" onclick="pickRatio(this)">3:4</button>
+            <button class="ratio-btn" data-r="0.5625" onclick="pickRatio(this)">9:16</button>
+            <button class="ratio-btn" data-r="0" onclick="pickRatio(this)">自由</button>
+            <span style="color:rgba(255,255,255,0.3);margin:0 2px">|</span>
+            <button onclick="zoomCrop(1.25)" title="放大" style="font-size:18px;line-height:1;padding:5px 12px">+</button>
+            <button onclick="zoomCrop(0.8)" title="缩小" style="font-size:18px;line-height:1;padding:5px 12px">-</button>
+            <button class="ok" onclick="doCrop()">确认裁剪</button>
+            <button onclick="noCrop()">取消</button>
+        </div>
+        <div class="crop-wrap" id="cropWrap">
+            <img id="cropImg">
+            <div class="crop-box" id="cropBox"></div>
+        </div>
+        <div class="crop-msg" id="cropMsg">拖拽白色框调整裁剪区域</div>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        
-        let contentImage = null; 
-        let creditsContentImage = null; 
+
+        let contentImage = null;
+        let creditsContentImage = null;
         let currentCoverType = 'wechat';
-        
+
+        // ---- 裁剪状态 ----
+        let cropSrc = null;
+        let crop = { x: 0, y: 0, w: 0, h: 0, r: 16/9, s: 1 };
+        let cropDrag = false, cropDX = 0, cropDY = 0;
+
         const coverConfigs = {
-            wechat: { width: 1080, height: 1448 },
+            wechat:   { width: 1080, height: 1448 },
             bilibili: { width: 1920, height: 1080 },
             vertical: { width: 1080, height: 1920 },
-            credits: { width: 1080, height: 1920 }
+            credits:  { width: 1080, height: 1920 }
         };
 
-        // 统一资源管理
+        // ============================================
+        // 资源管理 — 仅 search.jpg 为位图
+        // bg 由 #FC8166 + logo_line_black.svg (tint #F97052) 矢量生成
+        // ============================================
         const assets = {
-            bg: { img: new Image(), src: './bg.jpg', fb: 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/bg.jpg' },
-            logo: { img: new Image(), src: './logo.png', fb: 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/logo.png' },
-            wm: { img: new Image(), src: './watermark.png', fb: 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/watermark.png' },
             search: { img: new Image(), src: './search.jpg', fb: 'https://images.weserv.nl/?url=https://ylzbl.github.io/tools/vidcover/search.jpg' }
         };
 
-        function loadBaseImages() {
-            let loaded = 0;
-            const checkDone = () => { if (++loaded >= 4) drawCanvas(); };
-            
-            Object.values(assets).forEach(asset => {
-                asset.img.crossOrigin = 'anonymous';
-                asset.img.onload = checkDone;
-                asset.img.onerror = checkDone;
-                asset.img.src = asset.src;
-                
-                // 网络降级容错
-                setTimeout(() => {
-                    if (!asset.img.complete || asset.img.naturalWidth === 0) {
-                        asset.img.onload = drawCanvas;
-                        asset.img.src = asset.fb;
+        // ============================================
+        // SVG 矢量资源
+        // ============================================
+        const SVG_CHAR_RATIO = 199 / 231;   // logo_color.svg  w/h
+        const SVG_TEXT_RATIO = 394 / 108;   // logo_text.svg   w/h
+        const SVG_LINE_RATIO = 199 / 231;   // logo_line_black.svg w/h
+        const BG_COLOR       = '#FC8166';
+        const LINE_TINT      = '#F97052';
+
+        const svgColor     = new Image();
+        const svgText      = new Image();
+        const svgLineBlack = new Image();
+        let svgsReady = false;
+
+        /**
+         * 通用资源加载：同步 XHR 读取文件内容 → data URL
+         * XHR 在 file:// 和 http(s):// 下都可用（不受 CORS 限制）
+         * data URL 被浏览器视为 same-origin，不会 taint canvas
+         */
+        function xhrAsDataURL(url, mimeType) {
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, false); // 同步
+                const isSvg = /svg/i.test(mimeType);
+                // 二进制文件：用 text/plain 强制拿到原始字节字符串
+                // SVG 文件：默认 responseText 即可
+                if (!isSvg) xhr.overrideMimeType('text/plain; charset=x-user-defined');
+                xhr.send();
+                if (xhr.status === 200 || xhr.status === 0) {
+                    // status===0 适用于 file:// 协议
+                    if (isSvg) {
+                        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xhr.responseText);
+                    } else {
+                        // 将原始字节字符串转 base64
+                        const raw = xhr.responseText;
+                        const bytes = new Uint8Array(raw.length);
+                        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i) & 0xff;
+                        // 分块转 base64（避免超大字符串的 btoa 溢出）
+                        let binary = '';
+                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                        return 'data:' + mimeType + ';base64,' + btoa(binary);
                     }
-                }, 1000);
+                }
+            } catch (e) {
+                console.warn('[XHR] ' + url + ' 失败:', e.message);
+            }
+            return null;
+        }
+
+        function loadSVGs() {
+            const files = [
+                { name: 'logo_color.svg',     img: svgColor },
+                { name: 'logo_text.svg',      img: svgText },
+                { name: 'logo_line_black.svg', img: svgLineBlack }
+            ];
+            let loaded = 0;
+            files.forEach(({ name, img }) => {
+                const done = (ok, method) => {
+                    console.log(`[SVG] ${name}: ${ok ? 'OK' : 'FAIL'} (${method})`);
+                    if (++loaded >= 3) { svgsReady = true; drawCanvas(); }
+                };
+                // 方案1：同步 XHR → data URL（file:// 和 http 都可用）
+                const dataUrl = xhrAsDataURL('./' + name, 'image/svg+xml');
+                if (dataUrl) {
+                    img.onload  = () => done(true, 'XHR dataURL');
+                    img.onerror = () => done(false, 'XHR dataURL');
+                    img.src = dataUrl;
+                } else {
+                    // 方案2：fetch（仅 http/https）
+                    fetch('./' + name)
+                        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+                        .then(text => {
+                            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+                            img.onload  = () => done(true, 'fetch dataURL');
+                            img.onerror = () => done(false, 'fetch dataURL');
+                        })
+                        .catch(() => {
+                            // 方案3：直接连线（可能 taint，作为最后 fallback）
+                            console.warn(`[SVG] ${name} XHR+fetch 均失败, 直接连线（可能 taint）`);
+                            img.onload  = () => done(true, 'direct');
+                            img.onerror = () => done(false, 'direct');
+                            img.src = './' + name;
+                        });
+                }
             });
         }
 
+        function loadBaseImages() {
+            let loaded = 0;
+            const checkDone = () => { if (++loaded >= Object.keys(assets).length) drawCanvas(); };
+
+            Object.values(assets).forEach(asset => {
+                // 方案1：同步 XHR → base64 data URL
+                const dataUrl = xhrAsDataURL(asset.src, 'image/jpeg');
+                if (dataUrl) {
+                    asset.img.onload = checkDone;
+                    asset.img.onerror = checkDone;
+                    asset.img.src = dataUrl;
+                    console.log('[Asset] ' + asset.src + ' → XHR base64 dataURL');
+                    // 仍设 CDN 回退
+                    setTimeout(() => {
+                        if (!asset.img.complete || asset.img.naturalWidth === 0) {
+                            if (asset.fb) {
+                                console.log('[Asset] 本地加载失败，尝试 CDN:', asset.fb);
+                                asset.img.crossOrigin = 'anonymous';
+                                asset.img.onload = drawCanvas;
+                                asset.img.src = asset.fb;
+                            }
+                        }
+                    }, 1500);
+                    return;
+                }
+                // 方案2：fetch → blob → ObjectURL
+                asset.img.onload = checkDone;
+                asset.img.onerror = checkDone;
+                fetch(asset.src)
+                    .then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+                    .then(blob => {
+                        asset.img.src = URL.createObjectURL(blob);
+                        console.log('[Asset] ' + asset.src + ' → fetch blob URL');
+                    })
+                    .catch(() => {
+                        // 方案3：直接连线
+                        console.warn('[Asset] ' + asset.src + ' XHR+fetch 均失败, 直接连线');
+                        asset.img.src = asset.src;
+                    });
+                // CDN 回退
+                setTimeout(() => {
+                    if (!asset.img.complete || asset.img.naturalWidth === 0) {
+                        if (asset.fb) {
+                            console.log('[Asset] 本地加载失败，尝试 CDN:', asset.fb);
+                            asset.img.crossOrigin = 'anonymous';
+                            asset.img.onload = drawCanvas;
+                            asset.img.src = asset.fb;
+                        }
+                    }
+                }, 1500);
+            });
+        }
+
+        // ============================================
+        // SVG Logo 组合绘制 — 图形左 + 文字右
+        // textH = 0.8 × charH，gap = 0.12 × charH，保持各自宽高比
+        // 返回组合体总高度（= charH）
+        // ============================================
+        function drawLogoCombo(x, y, maxW) {
+            if (!svgsReady) return 0;
+
+            const GAP_RATIO      = 0.12;
+            const TEXT_H_RATIO   = 0.8;
+            const coeff = SVG_CHAR_RATIO + GAP_RATIO + TEXT_H_RATIO * SVG_TEXT_RATIO;
+
+            const H      = maxW / coeff;
+            const charW  = H * SVG_CHAR_RATIO;
+            const charH  = H;
+            const gap    = H * GAP_RATIO;
+            const textH  = H * TEXT_H_RATIO;
+            const textW  = textH * SVG_TEXT_RATIO;
+
+            ctx.drawImage(svgColor, x, y, charW, charH);
+            ctx.drawImage(svgText,  x + charW + gap, y + (charH - textH) / 2, textW, textH);
+
+            return charH;
+        }
+
+        // ============================================
+        // SVG Watermark 组合绘制 — 图形上 + 文字下，同宽，居中
+        // globalAlpha = 0.06
+        // ============================================
+        function drawWatermarkCombo(centerX, centerY, maxW) {
+            if (!svgsReady) return;
+
+            const CHAR_ASPECT = 231 / 199;   // h/w
+            const TEXT_ASPECT = 108 / 394;   // h/w
+            const gap = maxW * 0.05;
+            const totalCoeff = CHAR_ASPECT + TEXT_ASPECT;
+            const availH = canvas.height * 0.84;
+            const W = Math.min(maxW, (availH - gap) / totalCoeff);
+
+            const charW = W;
+            const charH = W * CHAR_ASPECT;
+            const textW = W;
+            const textH = W * TEXT_ASPECT;
+            const totalH = charH + gap + textH;
+
+            const x = centerX - W / 2;
+            const y = centerY - totalH / 2;
+
+            ctx.save();
+            ctx.globalAlpha = 0.06;
+            ctx.drawImage(svgColor, x, y, charW, charH);
+            ctx.drawImage(svgText,  x, y + charH + gap, textW, textH);
+            ctx.restore();
+        }
+
+        // ============================================
+        // LocalStorage 状态管理
+        // ============================================
         function saveState() {
             const state = {
                 coverType: currentCoverType,
-                topText: document.getElementById('topText').value,
-                bottomText: document.getElementById('bottomText').value,
+                standardText: document.getElementById('standardText').value,
                 creditsTopText: document.getElementById('creditsTopText').value,
                 creditsBottomText: document.getElementById('creditsBottomText').value,
                 contentImageData: contentImage ? contentImage.src : null,
                 creditsContentImageData: creditsContentImage ? creditsContentImage.src : null
             };
-            try { localStorage.setItem('vidcover_state', JSON.stringify(state)); } 
+            try { localStorage.setItem('vidcover_state', JSON.stringify(state)); }
             catch (e) {
                 state.contentImageData = state.creditsContentImageData = null;
                 try { localStorage.setItem('vidcover_state', JSON.stringify(state)); } catch(e2) {}
@@ -216,21 +434,29 @@
                         if (radio) radio.checked = true;
                         currentCoverType = state.coverType;
                     }
-                    ['topText', 'bottomText', 'creditsTopText', 'creditsBottomText'].forEach(id => {
+                    if (state.standardText !== undefined) {
+                        document.getElementById('standardText').value = state.standardText;
+                    } else if (state.topText !== undefined || state.bottomText !== undefined) {
+                        document.getElementById('standardText').value = [state.topText, state.bottomText].filter(Boolean).join('\n');
+                    }
+                    ['creditsTopText', 'creditsBottomText'].forEach(id => {
                         if (state[id] !== undefined) document.getElementById(id).value = state[id];
                     });
                     if (state.contentImageData) {
-                        contentImage = new Image(); contentImage.crossOrigin = 'anonymous';
+                        contentImage = new Image();
                         contentImage.onload = drawCanvas; contentImage.src = state.contentImageData;
                     }
                     if (state.creditsContentImageData) {
-                        creditsContentImage = new Image(); creditsContentImage.crossOrigin = 'anonymous';
+                        creditsContentImage = new Image();
                         creditsContentImage.onload = drawCanvas; creditsContentImage.src = state.creditsContentImageData;
                     }
                 }
             } catch (e) {}
         }
 
+        // ============================================
+        // 界面交互
+        // ============================================
         function changeCoverType() {
             currentCoverType = document.querySelector('input[name="coverType"]:checked').value;
             const isVert = currentCoverType === 'vertical';
@@ -240,7 +466,7 @@
             document.getElementById('creditsImageUploadGroup').style.display = isCred ? 'block' : 'none';
             document.getElementById('standardTextInputs').style.display = isCred ? 'none' : 'block';
             document.getElementById('creditsTextInputs').style.display = isCred ? 'block' : 'none';
-            
+
             saveState();
             drawCanvas();
         }
@@ -267,7 +493,6 @@
                     e.preventDefault();
                     if (evt === 'dragover') newUploadArea.classList.add('dragover');
                     else newUploadArea.classList.remove('dragover');
-                    
                     if (evt === 'drop' && e.dataTransfer.files.length > 0) {
                         const file = e.dataTransfer.files[0];
                         if (file.type.startsWith('image/')) handleFile(file, areaId, inputId, infoId, isCredits);
@@ -282,16 +507,18 @@
             const reader = new FileReader();
             reader.onload = e => {
                 const img = new Image();
-                img.crossOrigin = 'anonymous';
                 img.onload = () => {
-                    if (isCredits) creditsContentImage = img; else contentImage = img;
-                    saveState(); drawCanvas();
+                    if (isCredits) {
+                        creditsContentImage = img; saveState(); drawCanvas();
+                    } else {
+                        openCrop(img);
+                    }
                 };
                 img.src = e.target.result;
-                
+
                 document.getElementById(infoId).innerHTML = `<strong>已上传：</strong>${file.name}<br><strong>大小：</strong>${(file.size/1024/1024).toFixed(2)} MB`;
                 document.getElementById(infoId).style.display = 'block';
-                
+
                 const uploadArea = document.getElementById(areaId);
                 uploadArea.innerHTML = `<div class="upload-icon">✅</div><div class="upload-text">图片已上传</div><div class="upload-hint">点击重新选择图片</div><input type="file" class="file-input" id="${inputId}" accept="image/*">`;
                 bindUploadEvents(areaId, inputId, infoId, isCredits);
@@ -316,34 +543,80 @@
             saveState();
             if(currentCoverType === 'credits') { drawCanvas(); return; }
 
-            const topText = document.getElementById('topText').value;
-            const bottomText = document.getElementById('bottomText').value;
-            const maxW = Math.max(countCharacters(topText).effectiveWidth, countCharacters(bottomText).effectiveWidth);
-            const scale = maxW > 18 ? Math.max(0.5, 18 / maxW) : 1;
-            
-            document.getElementById('scaleInfo').textContent = `当前缩放: ${Math.round(scale * 100)}% (最宽行: ${maxW}字符宽度)`;
-            document.getElementById('warningBanner').style.display = (topText.length + bottomText.length > 10) ? 'block' : 'none';
+            const text = document.getElementById('standardText').value;
+            const lines = text.split('\n');
+            let maxW = 0;
+            let overLength = false;
+            lines.forEach(line => {
+                const w = countCharacters(line).effectiveWidth;
+                if (w > maxW) maxW = w;
+                if (w > 20) overLength = true;
+            });
+
+            const actualEW = Math.max(16, Math.min(maxW, 20));
+            const scale = 16 / actualEW;
+
+            document.getElementById('scaleInfo').textContent = `当前字号缩放: ${Math.round(scale * 100)}% (最宽行: ${maxW}字符宽度, 行数: ${lines.length})`;
+
+            const warningBanner = document.getElementById('warningBanner');
+            if (overLength || lines.length > 4) {
+                warningBanner.style.display = 'block';
+                warningBanner.innerText = lines.length > 4
+                    ? '注意：超过4行可能会超出下方的预留空间！'
+                    : '注意：单行超过10中文字/20英文字符将不再缩小，可能超出画面边距！';
+            } else {
+                warningBanner.style.display = 'none';
+            }
+
             drawCanvas();
         }
 
         // ============================================
         // 渲染通用组件
         // ============================================
-        function drawBgAndLogo(yOffset = 0, isCredits = false) {
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#FF8C69'); gradient.addColorStop(1, '#FFE4B5');
-            ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            if (assets.bg.img.complete && assets.bg.img.naturalWidth > 0) {
-                ctx.drawImage(assets.bg.img, 0, 0, canvas.width, canvas.height);
-            }
-            
-            let logoH = 0;
-            if (assets.logo.img.complete && assets.logo.img.naturalWidth > 0) {
-                const logoW = isCredits ? 380 : canvas.width * 0.4;
-                logoH = (assets.logo.img.naturalHeight / assets.logo.img.naturalWidth) * logoW;
-                ctx.drawImage(assets.logo.img, (canvas.width - logoW) / 2, yOffset, logoW, logoH);
-            }
+
+        /**
+         * 绘制矢量背景：#FC8166 纯色 + logo_line_black.svg tinted #F97052
+         */
+        function drawBg() {
+            ctx.fillStyle = BG_COLOR;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (!svgsReady || !svgLineBlack.complete) return;
+
+            // 大号 tinted 线条 logo 作为背景装饰
+            // 必须在临时 canvas 上做 tint，避免 source-atop 污染主画布已有像素
+            const lineW = Math.round(canvas.width * 0.77);
+            const lineH = Math.round(lineW / SVG_LINE_RATIO);
+            const lineX = canvas.width - lineW;
+            const lineY = -Math.round(lineH * 0.1);
+
+            const tmp = document.createElement('canvas');
+            tmp.width = lineW; tmp.height = lineH;
+            const tCtx = tmp.getContext('2d');
+            tCtx.drawImage(svgLineBlack, 0, 0, lineW, lineH);
+            tCtx.globalCompositeOperation = 'source-atop';
+            tCtx.fillStyle = LINE_TINT;
+            tCtx.fillRect(0, 0, lineW, lineH);
+
+            ctx.drawImage(tmp, lineX, lineY, lineW, lineH);
+        }
+
+        /**
+         * 绘制背景 + Logo 组合
+         * @param {number} yOffset - Logo 的 Y 坐标
+         * @param {boolean} isCredits - 是否为 Credits 模式（logo 居中、固定宽度 380）
+         * @param {boolean} forceLeftLogo - 是否强制左对齐
+         * @param {number} logoXOffset - 左对齐时的 X 坐标
+         * @returns {number} logoH — 组合体高度（用于后续排版间距计算）
+         */
+        function drawBgAndLogo(yOffset = 0, isCredits = false, forceLeftLogo = false, logoXOffset = 100) {
+            drawBg();
+
+            const logoW = isCredits ? 380 : canvas.width * 0.4;
+            const logoX = forceLeftLogo ? logoXOffset : (canvas.width - logoW) / 2;
+            const logoH = drawLogoCombo(logoX, yOffset, logoW);
+
             return logoH;
         }
 
@@ -353,7 +626,7 @@
                 const imgAspect = img.naturalWidth / img.naturalHeight;
                 const areaAspect = w / h;
                 let drawW = w, drawH = h, drawX = x, drawY = y;
-                if (imgAspect > areaAspect) { drawW = h * imgAspect; drawX = x + (w - drawW) / 2; } 
+                if (imgAspect > areaAspect) { drawW = h * imgAspect; drawX = x + (w - drawW) / 2; }
                 else { drawH = w / imgAspect; drawY = y + (h - drawH) / 2; }
                 ctx.drawImage(img, drawX, drawY, drawW, drawH);
                 ctx.restore();
@@ -365,95 +638,256 @@
             }
         }
 
-        function drawTitleBox(text, y, fontSize, maxTextWidth, isTop, padding, borderWidth) {
-            if (!text) return 0;
-            ctx.font = `bold ${fontSize}px 'AliPuHui', sans-serif`;
-            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-            
-            const textWidth = Math.min(ctx.measureText(text).width, maxTextWidth);
-            const boxHeight = fontSize * 1.2 + padding * 2;
-            const boxWidth = textWidth + padding * 2;
-            const topX = (canvas.width - textWidth) / 2;
-            const boxX = topX - padding;
-            
-            if (isTop) {
-                ctx.fillStyle = '#FFA349'; ctx.fillRect(boxX, y, boxWidth, boxHeight);
-                ctx.fillStyle = '#FFFFFF'; ctx.fillRect(boxX, y, borderWidth, boxHeight); ctx.fillRect(boxX, y, boxWidth, borderWidth);
-                ctx.fillStyle = '#000000'; ctx.fillText(text, topX, y + boxHeight / 2);
-            } else {
-                ctx.fillStyle = '#000000'; ctx.fillRect(boxX, y, boxWidth, boxHeight);
-                ctx.fillStyle = '#FFA349'; ctx.fillRect(boxX + boxWidth - borderWidth, y, borderWidth, boxHeight); ctx.fillRect(boxX, y + boxHeight - borderWidth, boxWidth, borderWidth);
-                ctx.fillStyle = '#FFFFFF'; ctx.fillText(text, topX, y + boxHeight / 2);
+        function drawNewTitleStyle(textStr, startX, startY, alignBottom = false, maxBoxHeight = 0, shadowColor = '') {
+            if (!textStr) return;
+            const lines = textStr.split('\n');
+            let maxW = 0;
+            lines.forEach(l => { maxW = Math.max(maxW, countCharacters(l).effectiveWidth); });
+
+            const actualEW = Math.max(16, maxW);
+            let fontSize = 1.3 * (canvas.width * 0.8) / (actualEW / 2);
+
+            // 宽度约束：确保文本不超出画面右边（右边距 = 左边距 = startX）
+            const maxFitFontSize = 2 * (canvas.width - 2 * startX) / maxW;
+            fontSize = Math.min(fontSize, maxFitFontSize);
+
+            // 高度约束：当文本总高度超出可用空间时，等比缩小字号
+            if (maxBoxHeight > 0 && lines.length > 0) {
+                const totalTextHeight = lines.length * (fontSize * 1.2);
+                if (totalTextHeight > maxBoxHeight) {
+                    fontSize *= (maxBoxHeight / totalTextHeight);
+                }
             }
-            return boxHeight;
+
+            ctx.font = `italic 900 ${fontSize}px 'AliPuHui', sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+
+            if (shadowColor) {
+                ctx.shadowColor = shadowColor;
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = fontSize * (10 / 192);
+                ctx.shadowOffsetY = fontSize * (10 / 192);
+            }
+
+            const totalRenderedHeight = lines.length * (fontSize * 1.2);
+            let currentY = startY;
+            if (alignBottom) {
+                currentY = startY + maxBoxHeight - totalRenderedHeight;
+            }
+
+            const innerLineWidth = fontSize * (20 / 192);
+
+            lines.forEach(line => {
+                if(line.trim()) {
+                    ctx.lineWidth = innerLineWidth;
+                    ctx.strokeStyle = '#000000';
+                    ctx.strokeText(line, startX, currentY);
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(line, startX, currentY);
+                }
+                currentY += fontSize * 1.2;
+            });
+
+            if (shadowColor) {
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+            }
         }
 
-        function drawCombinedTitles(baseY, isBilibili) {
-            const topText = document.getElementById('topText').value;
-            const bottomText = document.getElementById('bottomText').value;
-            if (!topText && !bottomText) return;
+        // ============================================
+        // 图片裁剪
+        // ============================================
+        function openCrop(img) {
+            cropSrc = img;
+            crop.r = 16/9;
+            document.querySelectorAll('#cropBar .ratio-btn').forEach(b => b.classList.remove('on'));
+            document.querySelector('#cropBar .ratio-btn[data-r="1.7778"]').classList.add('on');
 
-            const maxW = Math.max(countCharacters(topText).effectiveWidth, countCharacters(bottomText).effectiveWidth);
-            let scale = maxW > 18 ? Math.max(0.5, 18 / maxW) : 1;
-            let fontSize = 85 * scale;
-            let padding = isBilibili ? 25 : 15;
-            let borderWidth = isBilibili ? 12 : 10;
-            let maxTextWidth = canvas.width * (isBilibili ? 0.85 : 0.8);
-            
-            if (isBilibili) {
-                fontSize = 110; ctx.font = `bold ${fontSize}px 'AliPuHui', sans-serif`;
-                const maxWBotTop = Math.max(topText ? ctx.measureText(topText).width : 0, bottomText ? ctx.measureText(bottomText).width : 0);
-                if (maxWBotTop + padding * 2 > maxTextWidth) fontSize = fontSize * (maxTextWidth - padding * 2) / maxWBotTop;
-                
-                let linesCount = (topText ? 1 : 0) + (bottomText ? 1 : 0);
-                if (linesCount > 0 && linesCount * (fontSize * 1.2 + padding * 2) > canvas.height / 3) {
-                    fontSize = (canvas.height / 3 / linesCount - padding * 2) / 1.2;
-                }
-                baseY = canvas.height - 100 - linesCount * (fontSize * 1.2 + padding * 2);
-            } else {
-                baseY -= padding; // Pixel offset match for original layout
+            const mw = Math.min(700, window.innerWidth - 40);
+            const mh = Math.min(500, window.innerHeight - 140);
+            const ar = img.naturalWidth / img.naturalHeight;
+            let dw, dh;
+            if (ar > mw / mh) { dw = mw; dh = mw / ar; } else { dh = mh; dw = mh * ar; }
+            crop.s = dw / img.naturalWidth;
+
+            const wrap = document.getElementById('cropWrap');
+            wrap.style.width = dw + 'px';
+            wrap.style.height = dh + 'px';
+
+            const ci = document.getElementById('cropImg');
+            ci.src = img.src;
+            ci.style.width = dw + 'px';
+            ci.style.height = dh + 'px';
+
+            let bw, bh;
+            if (dw / dh > crop.r) { bh = dh; bw = dh * crop.r; } else { bw = dw; bh = dw / crop.r; }
+            crop.x = (dw - bw) / 2; crop.y = (dh - bh) / 2; crop.w = bw; crop.h = bh;
+            syncCropBox();
+            document.getElementById('cropOverlay').classList.add('active');
+        }
+
+        function pickRatio(btn) {
+            document.querySelectorAll('#cropBar .ratio-btn').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            crop.r = parseFloat(btn.dataset.r);
+            const wrap = document.getElementById('cropWrap');
+            const dw = parseFloat(wrap.style.width), dh = parseFloat(wrap.style.height);
+            let bw, bh;
+            if (crop.r === 0 || isNaN(crop.r)) {
+                bw = Math.min(crop.w, dw); bh = Math.min(crop.h, dh);
+            } else if (dw / dh > crop.r) { bh = dh; bw = dh * crop.r; }
+            else { bw = dw; bh = dw / crop.r; }
+            crop.w = bw; crop.h = bh;
+            crop.x = (dw - bw) / 2; crop.y = (dh - bh) / 2;
+            syncCropBox();
+        }
+
+        function syncCropBox() {
+            const b = document.getElementById('cropBox');
+            b.style.left = crop.x + 'px';
+            b.style.top = crop.y + 'px';
+            b.style.width = crop.w + 'px';
+            b.style.height = crop.h + 'px';
+            document.getElementById('cropMsg').textContent =
+                '裁剪区域: ' + Math.round(crop.w / crop.s) + ' x ' + Math.round(crop.h / crop.s) + ' px';
+        }
+
+        (function() {
+            const box = document.getElementById('cropBox');
+            function down(e) {
+                e.preventDefault(); cropDrag = true;
+                const t = e.touches ? e.touches[0] : e;
+                cropDX = t.clientX - crop.x;
+                cropDY = t.clientY - crop.y;
             }
+            function move(e) {
+                if (!cropDrag) return;
+                e.preventDefault();
+                const t = e.touches ? e.touches[0] : e;
+                const wrap = document.getElementById('cropWrap');
+                const dw = parseFloat(wrap.style.width), dh = parseFloat(wrap.style.height);
+                crop.x = Math.max(0, Math.min(dw - crop.w, t.clientX - cropDX));
+                crop.y = Math.max(0, Math.min(dh - crop.h, t.clientY - cropDY));
+                syncCropBox();
+            }
+            function up() { cropDrag = false; }
+            box.addEventListener('mousedown', down);
+            box.addEventListener('touchstart', down, { passive: false });
+            document.addEventListener('mousemove', move);
+            document.addEventListener('touchmove', move, { passive: false });
+            document.addEventListener('mouseup', up);
+            document.addEventListener('touchend', up);
+        })();
 
-            let currentY = baseY;
-            if (topText) currentY += drawTitleBox(topText, currentY, fontSize, maxTextWidth, true, padding, borderWidth);
-            if (bottomText) currentY += drawTitleBox(bottomText, currentY, fontSize, maxTextWidth, false, padding, borderWidth);
+        function zoomCrop(factor) {
+            const wrap = document.getElementById('cropWrap');
+            const dw = parseFloat(wrap.style.width), dh = parseFloat(wrap.style.height);
+            const cx = crop.x + crop.w / 2, cy = crop.y + crop.h / 2;
+
+            let nw = crop.w * factor, nh = crop.r > 0 ? nw / crop.r : crop.h * factor;
+            nw = Math.max(40, Math.min(nw, dw));
+            nh = Math.max(40, Math.min(nh, dh));
+            if (crop.r > 0) { nh = nw / crop.r; if (nh > dh) { nh = dh; nw = nh * crop.r; } }
+
+            crop.x = cx - nw / 2; crop.y = cy - nh / 2;
+            crop.w = nw; crop.h = nh;
+            crop.x = Math.max(0, Math.min(crop.x, dw - crop.w));
+            crop.y = Math.max(0, Math.min(crop.y, dh - crop.h));
+            syncCropBox();
+        }
+
+        document.getElementById('cropOverlay').addEventListener('wheel', e => {
+            e.preventDefault();
+            zoomCrop(e.deltaY < 0 ? 1.08 : 0.92);
+        }, { passive: false });
+
+        function doCrop() {
+            const s = crop.s;
+            const sx = crop.x / s, sy = crop.y / s, sw = crop.w / s, sh = crop.h / s;
+            const c = document.createElement('canvas');
+            c.width = Math.round(sw); c.height = Math.round(sh);
+            c.getContext('2d').drawImage(cropSrc, sx, sy, sw, sh, 0, 0, c.width, c.height);
+            const out = new Image();
+            out.onload = () => {
+                contentImage = out;
+                saveState(); drawCanvas();
+                document.getElementById('recropBtn').style.display = 'inline-block';
+            };
+            out.src = c.toDataURL('image/jpeg', 0.92);
+            document.getElementById('cropOverlay').classList.remove('active');
+        }
+
+        function noCrop() {
+            document.getElementById('cropOverlay').classList.remove('active');
+        }
+
+        function recropContent() {
+            if (cropSrc && cropSrc.complete) openCrop(cropSrc);
         }
 
         // ============================================
         // 路由渲染绘制
-        // ============================================
+        // =============================================
         function drawCanvas() {
             const config = coverConfigs[currentCoverType];
             const canvasContainer = document.querySelector('.canvas-container');
             canvas.width = config.width; canvas.height = config.height;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
+            const standardText = document.getElementById('standardText') ? document.getElementById('standardText').value : '';
+
             if (currentCoverType === 'vertical') {
+                // ---- 竖屏短标题：透明底 + 水印 + 标题 ----
                 canvasContainer.classList.add('transparent-mode');
-                if (assets.wm.img.complete && assets.wm.img.naturalWidth > 0) {
-                    const wmWidth = canvas.width * 0.6; 
-                    const wmHeight = wmWidth * (assets.wm.img.naturalHeight / assets.wm.img.naturalWidth); 
-                    ctx.drawImage(assets.wm.img, (canvas.width - wmWidth) / 2, (canvas.height - wmHeight) / 2, wmWidth, wmHeight);
-                }
-                drawCombinedTitles(canvas.width * 0.2, false);
+                drawWatermarkCombo(canvas.width / 2, canvas.height / 2, canvas.width * 0.6);
+                const M = 90;
+                drawNewTitleStyle(standardText, M, M, false, canvas.height - 2 * M, '#FC8166');
             } else {
                 canvas.style.background = 'white';
                 canvasContainer.classList.remove('transparent-mode');
-                
+
                 if (currentCoverType === 'wechat') {
-                    const logoH = drawBgAndLogo(canvas.height * 0.1);
-                    const imgY = logoH > 0 ? (canvas.height * 0.12 + logoH + 40) : (canvas.height * 0.2);
+                    // ---- 微信视频号封面：bg + logo(左上) + 标题 + 图片 ----
+                    const M = 90;
+                    const logoH = drawBgAndLogo(M, false, true, M);
+
                     const imgH = canvas.width * 9 / 16;
-                    drawImageArea(contentImage, 0, imgY, canvas.width, imgH, '点击上传图片');
-                    const textStartY = (logoH > 0 ? (canvas.height * 0.2 + logoH) : (canvas.height * 0.2)) + imgH + 60;
-                    drawCombinedTitles(textStartY, false);
-                } 
+                    const canvasBottomMargin = Math.round(canvas.height * 0.074);
+                    const imageStartY = canvas.height - imgH - canvasBottomMargin;
+
+                    // 标题区块：上边距=左边距=下边距=M，字号自动缩放适配空间
+                    const titleBlockTop = M + logoH + M;
+                    const titleBlockBottom = imageStartY - M;
+                    const titleBlockHeight = titleBlockBottom - titleBlockTop;
+
+                    drawNewTitleStyle(standardText, M, titleBlockTop, true, titleBlockHeight);
+                    drawImageArea(contentImage, 0, imageStartY, canvas.width, imgH, '点击上传图片');
+                }
                 else if (currentCoverType === 'bilibili') {
-                    drawBgAndLogo(-9999); // Draw only BG
+                    // ---- B站视频封面：bg + 图片 + 标题 ----
+                    drawBgAndLogo(-9999);
                     drawImageArea(contentImage, 0, 0, canvas.width, canvas.height, '点击上传图片', 48);
-                    drawCombinedTitles(0, true);
-                } 
+
+                    // B站线性渐变：左上角 #FC8166 纯色 → 到标题边距处保持纯色 → 线性渐变到右下角透明
+                    const M = 75;
+                    const solidT = Math.max(M / canvas.width, M / canvas.height);
+                    const gr = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gr.addColorStop(0, 'rgba(252, 129, 102, 1)');
+                    gr.addColorStop(solidT, 'rgba(252, 129, 102, 1)');
+                    gr.addColorStop(1, 'rgba(252, 129, 102, 0)');
+                    ctx.fillStyle = gr;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    drawNewTitleStyle(standardText, M, M, false, canvas.height - 2 * M);
+                }
                 else if (currentCoverType === 'credits') {
+                    // ---- 竖屏 Credits：bg + logo(居中) + 文字 + 气泡截图 ----
                     let currentY = canvas.width * 0.2;
                     currentY += drawBgAndLogo(currentY, true) + 70;
 
@@ -462,15 +896,15 @@
                         ctx.fillStyle = '#000000'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
                         ctx.font = `normal ${fontSize}px 'AliPuHui', sans-serif`;
                         lines.forEach((line, i) => ctx.fillText(line, canvas.width / 2, currentY + i * lineH));
-                        currentY += lines.length * lineH + 70;
+                        currentY += lines.length * lineH + 50;
                     };
 
                     drawTextCentered(document.getElementById('creditsTopText').value, 45, 70);
 
                     let imgToDraw = (creditsContentImage && creditsContentImage.complete) ? creditsContentImage : (assets.search.img.complete && assets.search.img.naturalWidth > 0 ? assets.search.img : null);
-                    let drawImgW = 430, drawImgH = 240;
+                    let drawImgW = 516, drawImgH = 288;
                     if (imgToDraw) {
-                        const scale = Math.min(430 / imgToDraw.naturalWidth, 240 / imgToDraw.naturalHeight);
+                        const scale = Math.min(516 / imgToDraw.naturalWidth, 288 / imgToDraw.naturalHeight);
                         drawImgW = imgToDraw.naturalWidth * scale; drawImgH = imgToDraw.naturalHeight * scale;
                         ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowOffsetX = ctx.shadowOffsetY = 12; ctx.shadowBlur = 20;
                         ctx.drawImage(imgToDraw, (canvas.width - drawImgW) / 2, currentY, drawImgW, drawImgH);
@@ -480,36 +914,150 @@
                         ctx.fillStyle = '#999'; ctx.font = `normal 24px 'AliPuHui', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                         ctx.fillText('缺少气泡截图', canvas.width / 2, currentY + drawImgH / 2 - 12);
                     }
-                    currentY += drawImgH + 70;
+                    currentY += drawImgH + 50;
                     drawTextCentered(document.getElementById('creditsBottomText').value, 40, 60);
                 }
             }
         }
 
+        /**
+         * 诊断画布 taint 状态，返回详细诊断信息
+         */
+        function diagnoseCanvas() {
+            const info = {
+                protocol: location.protocol,
+                coverType: currentCoverType,
+                canvasSize: `${canvas.width}x${canvas.height}`,
+                svgColor:    { src: svgColor.src.substring(0, 80), isDataURL: svgColor.src.startsWith('data:'), loaded: svgColor.complete && svgColor.naturalWidth > 0, tainted: false },
+                svgText:     { src: svgText.src.substring(0, 80), isDataURL: svgText.src.startsWith('data:'), loaded: svgText.complete && svgText.naturalWidth > 0, tainted: false },
+                svgLineBlack:{ src: svgLineBlack.src.substring(0, 80), isDataURL: svgLineBlack.src.startsWith('data:'), loaded: svgLineBlack.complete && svgLineBlack.naturalWidth > 0, tainted: false },
+                contentImage: contentImage ? { src: contentImage.src.substring(0, 80), loaded: true, isDataURL: contentImage.src.startsWith('data:') } : null,
+                creditsContentImage: creditsContentImage ? { src: creditsContentImage.src.substring(0, 80), loaded: true, isDataURL: creditsContentImage.src.startsWith('data:') } : null,
+                searchImg: { src: assets.search.img.src.substring(0, 80), isDataURL: assets.search.img.src.startsWith('data:'), loaded: assets.search.img.complete && assets.search.img.naturalWidth > 0, crossOrigin: assets.search.img.crossOrigin }
+            };
+            // 测试每个单独图片是否会 taint canvas
+            const testImgs = [
+                { key: 'svgColor', img: svgColor },
+                { key: 'svgText', img: svgText },
+                { key: 'svgLineBlack', img: svgLineBlack },
+                { key: 'searchImg', img: assets.search.img }
+            ];
+            testImgs.forEach(({ key, img }) => {
+                if (!img.complete || img.naturalWidth === 0) return;
+                try {
+                    const tc = document.createElement('canvas');
+                    tc.width = 2; tc.height = 2;
+                    const tctx = tc.getContext('2d');
+                    tctx.drawImage(img, 0, 0, 2, 2);
+                    const url = tc.toDataURL();
+                    info[key].tainted = (url === 'data:,');
+                } catch(e) {
+                    info[key].tainted = true;
+                    info[key].error = e.message || String(e);
+                }
+            });
+            return info;
+        }
+
         function downloadImage() {
-            const link = document.createElement('a');
-            link.download = `${document.querySelector('label[for="'+currentCoverType+'"]').textContent.split(' ')[0]}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            const fileName = `${document.querySelector('label[for="'+currentCoverType+'"]').textContent.split(' ')[0]}.png`;
+
+            // ---- 预检查：画布是否被 taint ----
+            console.log('========== 导出诊断开始 ==========');
+            const diag = diagnoseCanvas();
+            console.log('[诊断信息]', JSON.stringify(diag, null, 2));
+
+            const taintedSources = [];
+            ['svgColor', 'svgText', 'svgLineBlack', 'searchImg'].forEach(key => {
+                if (diag[key] && diag[key].tainted) taintedSources.push(`${key}: ${diag[key].src}`);
+            });
+            if (contentImage && !contentImage.src.startsWith('data:')) taintedSources.push(`contentImage: ${contentImage.src.substring(0, 80)}`);
+            if (creditsContentImage && !creditsContentImage.src.startsWith('data:')) taintedSources.push(`creditsContentImage: ${creditsContentImage.src.substring(0, 80)}`);
+
+            if (taintedSources.length > 0) {
+                console.warn('[taint 检测] 以下资源可能导致跨域：', taintedSources);
+            }
+
+            // ---- 尝试导出 ----
+            let exported = false;
+            try {
+                const dataUrl = canvas.toDataURL('image/png');
+                if (dataUrl && dataUrl.length > 100) {
+                    // toDataURL 成功
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    exported = true;
+                    console.log('[导出] toDataURL 成功，大小:', Math.round(dataUrl.length / 1024), 'KB');
+                } else {
+                    console.warn('[导出] toDataURL 返回空/过短:', dataUrl.substring(0, 50));
+                }
+            } catch (e) {
+                console.error('[导出] toDataURL 异常:', e.name, e.message);
+            }
+
+            // toDataURL 失败时尝试 toBlob
+            if (!exported) {
+                console.log('[导出] 尝试 toBlob 备选方案...');
+                try {
+                    canvas.toBlob(blob => {
+                        if (blob && blob.size > 0) {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.download = fileName;
+                            link.href = url;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            setTimeout(() => URL.revokeObjectURL(url), 5000);
+                            console.log('[导出] toBlob 成功，大小:', Math.round(blob.size / 1024), 'KB');
+                        } else {
+                            console.error('[导出] toBlob 返回空 blob');
+                            showExportError(taintedSources);
+                        }
+                    }, 'image/png');
+                } catch (e2) {
+                    console.error('[导出] toBlob 异常:', e2.name, e2.message);
+                    showExportError(taintedSources);
+                }
+            }
+
+            console.log('========== 导出诊断结束 ==========');
+        }
+
+        function showExportError(taintedSources) {
+            let msg = '导出失败：画布被跨域内容污染。\n\n';
+            msg += '协议: ' + location.protocol + '\n';
+            msg += '封面类型: ' + currentCoverType + '\n\n';
+            if (taintedSources.length > 0) {
+                msg += '可能的污染源:\n' + taintedSources.join('\n') + '\n\n';
+            }
+            msg += '请打开 F12 控制台查看详细诊断信息（搜索 "导出诊断"）。\n';
+            msg += '排查要点:\n';
+            msg += '1. 是否通过 HTTP 服务器访问（非 file://）\n';
+            msg += '2. SVG 文件是否与本 HTML 在同一目录\n';
+            msg += '3. 上传的图片是否为本地文件（FileReader 读取）\n';
+            alert(msg);
         }
 
         function resetAll() {
-            document.getElementById('topText').value = '';
-            document.getElementById('bottomText').value = '';
+            document.getElementById('standardText').value = '';
             document.getElementById('creditsTopText').value = "搜索标题看全文\n秒懂更多深度信息";
             document.getElementById('creditsBottomText').value = "记者：小娱\n制作：James\n监制：吴立湘\n\n2026.3.22";
-            
             contentImage = creditsContentImage = null;
-            
+            cropSrc = null;
+            document.getElementById('recropBtn').style.display = 'none';
             document.getElementById('imageUploadArea').innerHTML = `<div class="upload-icon">📷</div><div class="upload-text">点击或拖拽图片到此处</div><div class="upload-hint">支持 JPG、PNG、GIF 格式</div><input type="file" class="file-input" id="imageFile" accept="image/*">`;
             document.getElementById('imageInfo').style.display = 'none';
             document.getElementById('creditsImageUploadArea').innerHTML = `<div class="upload-icon">📷</div><div class="upload-text">点击或拖拽气泡截图到此处</div><div class="upload-hint">支持 JPG、PNG 格式</div><input type="file" class="file-input" id="creditsImageFile" accept="image/*">`;
             document.getElementById('creditsImageInfo').style.display = 'none';
-            
             setupImageUpload(); updateText(); drawCanvas();
         }
 
-        loadState(); loadBaseImages(); setupImageUpload(); changeCoverType();
+        loadState(); loadBaseImages(); loadSVGs(); setupImageUpload(); changeCoverType();
         if (document.fonts) document.fonts.ready.then(drawCanvas);
     </script>
 </body>
